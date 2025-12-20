@@ -14,26 +14,12 @@ func TestWithTestData(t *testing.T) {
 		panic(err)
 	}
 
-	password, err := CalculatePassword(data)
+	password, err := PassowrdFromDial(data, false)
 	if err != nil {
 		panic(err)
 	}
 
 	assert.Equal(t, 3, *password)
-}
-
-func TestPartTwoWithTestData(t *testing.T) {
-	data, err := utils.ReadData("day_1_test_data")
-	if err != nil {
-		panic(err)
-	}
-
-	password, err := CalculatePasswordWihtRotations(data)
-	if err != nil {
-		panic(err)
-	}
-
-	assert.Equal(t, 6, *password)
 }
 
 func TestWithRealData(t *testing.T) {
@@ -42,12 +28,26 @@ func TestWithRealData(t *testing.T) {
 		panic(err)
 	}
 
-	password, err := CalculatePassword(data)
+	password, err := PassowrdFromDial(data, false)
 	if err != nil {
 		panic(err)
 	}
 
 	assert.Equal(t, 1034, *password)
+}
+
+func TestPartTwoWithTestData(t *testing.T) {
+	data, err := utils.ReadData("day_1_test_data")
+	if err != nil {
+		panic(err)
+	}
+
+	password, err := PassowrdFromDial(data, true)
+	if err != nil {
+		panic(err)
+	}
+
+	assert.Equal(t, 6, *password)
 }
 
 func TestPartTwoWithRealData(t *testing.T) {
@@ -56,7 +56,7 @@ func TestPartTwoWithRealData(t *testing.T) {
 		panic(err)
 	}
 
-	password, err := CalculatePasswordWihtRotations(data)
+	password, err := PassowrdFromDial(data, true)
 	if err != nil {
 		panic(err)
 	}
