@@ -3,18 +3,11 @@ package main
 import (
 	"testing"
 
-	"aoc2025/utils"
-
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPartOneWithTestData(t *testing.T) {
-	data, err := utils.ReadData("day_2_test_data")
-	if err != nil {
-		panic(err)
-	}
-
-	sum, err := SumOfInvalidIds(data, false)
+	sum, err := Day2("day_2_test_data", SIMPLE)
 	if err != nil {
 		panic(err)
 	}
@@ -23,12 +16,7 @@ func TestPartOneWithTestData(t *testing.T) {
 }
 
 func TestPartOneWithRealData(t *testing.T) {
-	data, err := utils.ReadData("day_2_data")
-	if err != nil {
-		panic(err)
-	}
-
-	sum, err := SumOfInvalidIds(data, false)
+	sum, err := Day2("day_2_data", SIMPLE)
 	if err != nil {
 		panic(err)
 	}
@@ -37,15 +25,19 @@ func TestPartOneWithRealData(t *testing.T) {
 }
 
 func TestPartTwoWithTestData(t *testing.T) {
-	data, err := utils.ReadData("day_2_test_data")
-	if err != nil {
-		panic(err)
-	}
-
-	sum, err := SumOfInvalidIds(data, true)
+	sum, err := Day2("day_2_test_data", COMPLEX)
 	if err != nil {
 		panic(err)
 	}
 
 	assert.Equal(t, 4174379265, *sum)
+}
+
+func TestPartTwoWithRealData(t *testing.T) {
+	sum, err := Day2("day_2_data", COMPLEX)
+	if err != nil {
+		panic(err)
+	}
+
+	assert.Equal(t, 54446379122, *sum)
 }
