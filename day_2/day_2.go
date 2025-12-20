@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 func Day2(path string, rule string) (*int, error) {
@@ -61,13 +59,11 @@ func getAllIds(data []string) ([]int, error) {
 
 		bottom, err := strconv.Atoi(bottomStr)
 		if err != nil {
-			spew.Dump(fmt.Sprintf("Error while formatting bottom of %s", bottomStr))
 			return nil, err
 		}
 
 		top, err := strconv.Atoi(topStr)
 		if err != nil {
-			spew.Dump(fmt.Sprintf("Error while formatting top of %s", topStr))
 			return nil, err
 		}
 
