@@ -3,6 +3,8 @@ package main
 import (
 	"strconv"
 	"strings"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Database struct {
@@ -67,4 +69,28 @@ func (d *Database) FreshIds() ([]int, error) {
 		}
 	}
 	return freshIds, nil
+}
+
+func (d *Database) AllFreshIds() (*int, error) {
+	freshIds := map[int]struct{}{}
+	for _, input := range d.ranges {
+		values := strings.Split(input, "-")
+		bottom, err := strconv.Atoi(values[0])
+		if err != nil {
+			return nil, err
+		}
+		top, err := strconv.Atoi(values[1])
+		if err != nil {
+			return nil, err
+		}
+
+		for i := bottom; i <= top; i++ {
+			spew.Dump("Add %d", i)
+			freshIds[i] = struct{}{}
+		}
+	}
+
+	sum := len(freshIds)
+
+	return &sum, nil
 }

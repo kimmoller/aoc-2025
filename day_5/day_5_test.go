@@ -23,15 +23,15 @@ func TestPartOneWithRealData(t *testing.T) {
 }
 
 func TestPartTwoWithTestData(t *testing.T) {
-	result, err := Day5("day_5_test_data")
+	result, err := Day5_part2("day_5_test_data")
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 3, *result)
+	assert.Equal(t, 14, *result)
 }
 
 func TestPartTwoWithRealData(t *testing.T) {
-	result, err := Day5("day_5_data")
+	result, err := Day5_part2("day_5_data")
 	if err != nil {
 		panic(err)
 	}
