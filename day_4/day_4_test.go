@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// FIX: Copied from Day 3
 func TestPartOneWithTestData(t *testing.T) {
 	result, err := Day4("day_4_test_data", 2)
 	if err != nil {
@@ -15,13 +14,12 @@ func TestPartOneWithTestData(t *testing.T) {
 	assert.Equal(t, 13, *result)
 }
 
-// FIX: Copied from Day 3
 func TestPartOneWithRealData(t *testing.T) {
 	result, err := Day4("day_4_data", 2)
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 17142, *result)
+	assert.Equal(t, 1349, *result)
 }
 
 // FIX: Copied from Day 3
