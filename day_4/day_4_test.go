@@ -7,7 +7,7 @@ import (
 )
 
 func TestPartOneWithTestData(t *testing.T) {
-	result, err := Day4("day_4_test_data", 2)
+	result, err := Day4("day_4_test_data", false)
 	if err != nil {
 		panic(err)
 	}
@@ -15,27 +15,25 @@ func TestPartOneWithTestData(t *testing.T) {
 }
 
 func TestPartOneWithRealData(t *testing.T) {
-	result, err := Day4("day_4_data", 2)
+	result, err := Day4("day_4_data", false)
 	if err != nil {
 		panic(err)
 	}
 	assert.Equal(t, 1349, *result)
 }
 
-// FIX: Copied from Day 3
 func TestPartTwoWithTestData(t *testing.T) {
-	result, err := Day4("day_4_test_data", 12)
+	result, err := Day4("day_4_test_data", true)
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 3121910778619, *result)
+	assert.Equal(t, 43, *result)
 }
 
-// FIX: Copied from Day 3
 func TestPartTwoWithRealData(t *testing.T) {
-	result, err := Day4("day_4_data", 12)
+	result, err := Day4("day_4_data", true)
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 169935154100102, *result)
+	assert.Equal(t, 8277, *result)
 }

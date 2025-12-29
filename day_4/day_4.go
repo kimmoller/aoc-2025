@@ -4,7 +4,7 @@ import (
 	"aoc2025/utils"
 )
 
-func Day4(path string, amountToActivate int) (*int, error) {
+func Day4(path string, recursive bool) (*int, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err
@@ -12,6 +12,12 @@ func Day4(path string, amountToActivate int) (*int, error) {
 
 	warehouse := NewWarehouse()
 	warehouse.Fill(data)
+
+	if recursive {
+		locations := warehouse.RecursiveAccessibleRollLocations([]Location{})
+		sum := len(locations)
+		return &sum, nil
+	}
 
 	locations := warehouse.AccessibleRollLocations()
 	sum := len(locations)

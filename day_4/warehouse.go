@@ -37,6 +37,27 @@ func (w *Warehouse) Fill(data []string) {
 	w.inventory = inventory
 }
 
+func (w *Warehouse) RemoveRolls(locations []Location) {
+	for _, location := range locations {
+		row := w.inventory[location.y]
+		row[location.x] = false
+	}
+}
+
+func (w *Warehouse) RecursiveAccessibleRollLocations(currentAccessibleRolls []Location) []Location {
+	accessibleRolls := currentAccessibleRolls
+	newAccessibleRolls := w.AccessibleRollLocations()
+
+	if len(newAccessibleRolls) > 0 {
+		w.RemoveRolls(newAccessibleRolls)
+		accessibleRolls = append(accessibleRolls, newAccessibleRolls...)
+		newRollCount := w.RecursiveAccessibleRollLocations(currentAccessibleRolls)
+		accessibleRolls = append(accessibleRolls, newRollCount...)
+	}
+
+	return accessibleRolls
+}
+
 func (w *Warehouse) AccessibleRollLocations() []Location {
 	accessibleRolls := []Location{}
 	for index, row := range w.inventory {
