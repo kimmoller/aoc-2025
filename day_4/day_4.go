@@ -13,6 +13,7 @@ func Day4(path string, amountToActivate int) (*int, error) {
 	warehouse := NewWarehouse()
 	warehouse.Fill(data)
 
-	sum := warehouse.NumberOfAccessibleRolls()
+	locations := warehouse.AccessibleRollLocations()
+	sum := len(locations)
 	return &sum, nil
 }

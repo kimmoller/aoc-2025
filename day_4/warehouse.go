@@ -4,6 +4,12 @@ import (
 	"strings"
 )
 
+type Location struct {
+	x      int
+	y      int
+	isRoll bool
+}
+
 type Warehouse struct {
 	width     int
 	inventory map[int][]bool
@@ -31,57 +37,59 @@ func (w *Warehouse) Fill(data []string) {
 	w.inventory = inventory
 }
 
-func (w *Warehouse) NumberOfAccessibleRolls() int {
-	sum := 0
+func (w *Warehouse) AccessibleRollLocations() []Location {
+	accessibleRolls := []Location{}
 	for index, row := range w.inventory {
 		for spot, roll := range row {
 			if !roll {
 				continue
 			}
 
-			adjacentSpots := w.adjacentSpots(spot, index)
+			adjacentLocations := w.adjacentLocations(spot, index)
 			adjacentRolls := 0
-			for _, spot := range adjacentSpots {
-				if spot {
+			for _, location := range adjacentLocations {
+				if location.isRoll {
 					adjacentRolls++
 				}
 			}
 
 			if adjacentRolls < 4 {
-				sum++
+				location := Location{x: spot, y: index, isRoll: true}
+				accessibleRolls = append(accessibleRolls, location)
 			}
 		}
 	}
 
-	return sum
+	return accessibleRolls
 }
 
-func (w *Warehouse) adjacentSpots(spot int, row int) []bool {
-	adjacentSpots := []bool{}
+func (w *Warehouse) adjacentLocations(spot int, row int) []Location {
+	adjacentLocations := []Location{}
 
-	// Get spots for the row above
-	adjacentSpots = append(adjacentSpots, partialAdjacentSpots(row-1, spot, w.width, w.inventory, false)...)
-	// Get spots for the same row
-	adjacentSpots = append(adjacentSpots, partialAdjacentSpots(row, spot, w.width, w.inventory, true)...)
-	// Get spots for the row below
-	adjacentSpots = append(adjacentSpots, partialAdjacentSpots(row+1, spot, w.width, w.inventory, false)...)
+	// Get locations for the row above
+	adjacentLocations = append(adjacentLocations, partialAdjacentLocations(row-1, spot, w.width, w.inventory, false)...)
+	// Get locations for the same row
+	adjacentLocations = append(adjacentLocations, partialAdjacentLocations(row, spot, w.width, w.inventory, true)...)
+	// Get locations for the row below
+	adjacentLocations = append(adjacentLocations, partialAdjacentLocations(row+1, spot, w.width, w.inventory, false)...)
 
-	return adjacentSpots
+	return adjacentLocations
 }
 
-func partialAdjacentSpots(rowIndex int, spot int, warehouseWidth int, inventory map[int][]bool, isSameRow bool) []bool {
-	spots := []bool{}
+func partialAdjacentLocations(rowIndex int, spot int, warehouseWidth int, inventory map[int][]bool, isSameRow bool) []Location {
+	locations := []Location{}
 	if row, ok := inventory[rowIndex]; ok {
-		locations := []int{spot - 1, spot, spot + 1}
+		spots := []int{spot - 1, spot, spot + 1}
 		if isSameRow {
-			locations = []int{spot - 1, spot + 1}
+			spots = []int{spot - 1, spot + 1}
 		}
-		for _, location := range locations {
-			if location >= 0 && location < warehouseWidth {
-				roll := row[location]
-				spots = append(spots, roll)
+		for _, spot := range spots {
+			if spot >= 0 && spot < warehouseWidth {
+				roll := row[spot]
+				location := Location{x: spot, y: rowIndex, isRoll: roll}
+				locations = append(locations, location)
 			}
 		}
 	}
-	return spots
+	return locations
 }
