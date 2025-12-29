@@ -59,57 +59,29 @@ func (w *Warehouse) NumberOfAccessibleRolls() int {
 func (w *Warehouse) adjacentSpots(spot int, row int) []bool {
 	adjacentSpots := []bool{}
 
-	adjacentSpots = append(adjacentSpots, spotsAbove(row, spot, w.width, w.inventory)...)
-	adjacentSpots = append(adjacentSpots, spotsNextTo(row, spot, w.width, w.inventory)...)
-	adjacentSpots = append(adjacentSpots, spotsBelow(row, spot, w.width, w.inventory)...)
+	// Get spots for the row above
+	adjacentSpots = append(adjacentSpots, partialAdjacentSpots(row-1, spot, w.width, w.inventory, false)...)
+	// Get spots for the same row
+	adjacentSpots = append(adjacentSpots, partialAdjacentSpots(row, spot, w.width, w.inventory, true)...)
+	// Get spots for the row below
+	adjacentSpots = append(adjacentSpots, partialAdjacentSpots(row+1, spot, w.width, w.inventory, false)...)
 
 	return adjacentSpots
 }
 
-func spotsAbove(row int, spot int, warehouseWidth int, inventory map[int][]bool) []bool {
+func partialAdjacentSpots(rowIndex int, spot int, warehouseWidth int, inventory map[int][]bool, isSameRow bool) []bool {
 	spots := []bool{}
-	if row, ok := inventory[row-1]; ok {
-
+	if row, ok := inventory[rowIndex]; ok {
 		locations := []int{spot - 1, spot, spot + 1}
+		if isSameRow {
+			locations = []int{spot - 1, spot + 1}
+		}
 		for _, location := range locations {
 			if location >= 0 && location < warehouseWidth {
 				roll := row[location]
 				spots = append(spots, roll)
 			}
 		}
-
-	}
-	return spots
-}
-
-func spotsNextTo(row int, spot int, warehouseWidth int, inventory map[int][]bool) []bool {
-	spots := []bool{}
-	if row, ok := inventory[row]; ok {
-
-		locations := []int{spot - 1, spot + 1}
-		for _, location := range locations {
-			if location >= 0 && location < warehouseWidth {
-				roll := row[location]
-				spots = append(spots, roll)
-			}
-		}
-
-	}
-	return spots
-}
-
-func spotsBelow(row int, spot int, warehouseWidth int, inventory map[int][]bool) []bool {
-	spots := []bool{}
-	if row, ok := inventory[row+1]; ok {
-
-		locations := []int{spot - 1, spot, spot + 1}
-		for _, location := range locations {
-			if location >= 0 && location < warehouseWidth {
-				roll := row[location]
-				spots = append(spots, roll)
-			}
-		}
-
 	}
 	return spots
 }
