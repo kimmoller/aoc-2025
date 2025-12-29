@@ -4,7 +4,7 @@ import (
 	"aoc2025/utils"
 )
 
-func Day3(path string) (*int, error) {
+func Day3(path string, amountToActivate int) (*int, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err
@@ -15,7 +15,7 @@ func Day3(path string) (*int, error) {
 		return nil, err
 	}
 
-	maximumJoltage, err := powerSupply.MaximumJoltage()
+	maximumJoltage, err := powerSupply.MaximumJoltage(amountToActivate)
 	if err != nil {
 		return nil, err
 	}

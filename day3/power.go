@@ -25,10 +25,10 @@ func NewPowerSupply(data []string) (*PowerSupply, error) {
 	return &PowerSupply{banks}, nil
 }
 
-func (p *PowerSupply) MaximumJoltage() (*int, error) {
+func (p *PowerSupply) MaximumJoltage(amountToActivate int) (*int, error) {
 	maxJoltage := 0
 	for _, bank := range p.banks {
-		value, err := joltage(bank)
+		value, err := joltage(bank, amountToActivate)
 		if err != nil {
 			return nil, err
 		}
@@ -38,28 +38,58 @@ func (p *PowerSupply) MaximumJoltage() (*int, error) {
 	return &maxJoltage, nil
 }
 
-func joltage(bank BatteryBank) (*int, error) {
-	firstValueIndex := 0
-	firstValue := 0
-	secondValue := 0
+func joltage(bank BatteryBank, amountToActivate int) (*int, error) {
+	joltages := []int{}
 
 	batteries := bank.batteries
-	for i := 0; i < len(bank.batteries)-1; i++ {
-		battery := batteries[i]
-		if battery.joltage > firstValue {
-			firstValue = battery.joltage
-			firstValueIndex = i
+	numberOfBatteries := len(batteries)
+	latestIndex := 0
+
+	for i := 0; i < amountToActivate; i++ {
+		highestValue := 0
+		highestValueIndex := 0
+
+		leftToActivate := amountToActivate - len(joltages)
+		loopLength := numberOfBatteries - (latestIndex + leftToActivate)
+		// This is required to make sure that the first loop takes into consideration that
+		// one battery will be activated on this run
+		if i == 0 {
+			loopLength++
+		}
+
+		if loopLength <= 0 {
+			break
+		}
+
+		startingIndex := 0
+		if i != 0 {
+			startingIndex = latestIndex + 1
+		}
+		endingIndex := startingIndex + loopLength
+
+		for j := startingIndex; j < endingIndex; j++ {
+			battery := batteries[j]
+			if battery.joltage > highestValue {
+				highestValue = battery.joltage
+				highestValueIndex = j
+			}
+		}
+		joltages = append(joltages, highestValue)
+		latestIndex = highestValueIndex
+	}
+
+	if len(joltages) < amountToActivate {
+		loopLength := amountToActivate - len(joltages)
+		for i := 0; i < loopLength; i++ {
+			indexToPick := i + latestIndex + 1
+			joltages = append(joltages, batteries[indexToPick].joltage)
 		}
 	}
 
-	for i := firstValueIndex + 1; i < len(bank.batteries); i++ {
-		battery := batteries[i]
-		if battery.joltage > secondValue {
-			secondValue = battery.joltage
-		}
+	strJoltage := ""
+	for _, value := range joltages {
+		strJoltage += strconv.Itoa(value)
 	}
-
-	strJoltage := strconv.Itoa(firstValue) + strconv.Itoa(secondValue)
 
 	joltage, err := strconv.Atoi(strJoltage)
 	if err != nil {
