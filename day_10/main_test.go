@@ -7,7 +7,7 @@ import (
 )
 
 func TestPartOneWithTestData(t *testing.T) {
-	result, err := Day6("day_6_test_data")
+	result, err := Run("test_data")
 	if err != nil {
 		panic(err)
 	}
@@ -15,7 +15,7 @@ func TestPartOneWithTestData(t *testing.T) {
 }
 
 func TestPartOneWithRealData(t *testing.T) {
-	result, err := Day6("day_6_data")
+	result, err := Run("data")
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +23,7 @@ func TestPartOneWithRealData(t *testing.T) {
 }
 
 func TestPartTwoWithTestData(t *testing.T) {
-	result, err := Day6("day_6_test_data")
+	result, err := Run("test_data")
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +31,7 @@ func TestPartTwoWithTestData(t *testing.T) {
 }
 
 func TestPartTwoWithRealData(t *testing.T) {
-	result, err := Day6("day_6_data")
+	result, err := Run("data")
 	if err != nil {
 		panic(err)
 	}

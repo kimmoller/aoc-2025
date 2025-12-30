@@ -6,7 +6,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-func Day6(path string) (*int, error) {
+func Run(path string) (*int, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err

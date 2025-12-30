@@ -4,7 +4,7 @@ import (
 	"aoc2025/utils"
 )
 
-func Day4(path string, recursive bool) (*int, error) {
+func Run(path string, recursive bool) (*int, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err

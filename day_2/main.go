@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func Day2(path string, rule string) (*int, error) {
+func Run(path string, rule string) (*int, error) {
 	data, err := completeData(path)
 
 	validator := NewValidator(data, rule)

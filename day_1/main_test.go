@@ -9,7 +9,7 @@ import (
 )
 
 func TestWithTestData(t *testing.T) {
-	data, err := utils.ReadData("day_1_test_data")
+	data, err := utils.ReadData("test_data")
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +23,7 @@ func TestWithTestData(t *testing.T) {
 }
 
 func TestWithRealData(t *testing.T) {
-	data, err := utils.ReadData("day_1_data")
+	data, err := utils.ReadData("data")
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +37,7 @@ func TestWithRealData(t *testing.T) {
 }
 
 func TestPartTwoWithTestData(t *testing.T) {
-	data, err := utils.ReadData("day_1_test_data")
+	data, err := utils.ReadData("test_data")
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +51,7 @@ func TestPartTwoWithTestData(t *testing.T) {
 }
 
 func TestPartTwoWithRealData(t *testing.T) {
-	data, err := utils.ReadData("day_1_data")
+	data, err := utils.ReadData("data")
 	if err != nil {
 		panic(err)
 	}

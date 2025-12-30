@@ -4,7 +4,7 @@ import (
 	"aoc2025/utils"
 )
 
-func Day3(path string, amountToActivate int) (*int, error) {
+func Run(path string, amountToActivate int) (*int, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err

@@ -7,37 +7,33 @@ import (
 )
 
 func TestPartOneWithTestData(t *testing.T) {
-	sum, err := Day2("day_2_test_data", SIMPLE)
+	result, err := Run("test_data", false)
 	if err != nil {
 		panic(err)
 	}
-
-	assert.Equal(t, 1227775554, *sum)
+	assert.Equal(t, 3, *result)
 }
 
 func TestPartOneWithRealData(t *testing.T) {
-	sum, err := Day2("day_2_data", SIMPLE)
+	result, err := Run("data", false)
 	if err != nil {
 		panic(err)
 	}
-
-	assert.Equal(t, 32976912643, *sum)
+	assert.Equal(t, 611, *result)
 }
 
 func TestPartTwoWithTestData(t *testing.T) {
-	sum, err := Day2("day_2_test_data", COMPLEX)
+	result, err := Run("test_data", true)
 	if err != nil {
 		panic(err)
 	}
-
-	assert.Equal(t, 4174379265, *sum)
+	assert.Equal(t, 14, *result)
 }
 
 func TestPartTwoWithRealData(t *testing.T) {
-	sum, err := Day2("day_2_data", COMPLEX)
+	result, err := Run("data", true)
 	if err != nil {
 		panic(err)
 	}
-
-	assert.Equal(t, 54446379122, *sum)
+	assert.Equal(t, 3, *result)
 }

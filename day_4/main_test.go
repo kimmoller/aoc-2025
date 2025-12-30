@@ -7,33 +7,33 @@ import (
 )
 
 func TestPartOneWithTestData(t *testing.T) {
-	result, err := Day5("day_5_test_data")
+	result, err := Run("test_data", false)
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 3, *result)
+	assert.Equal(t, 13, *result)
 }
 
 func TestPartOneWithRealData(t *testing.T) {
-	result, err := Day5("day_5_data")
+	result, err := Run("data", false)
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 611, *result)
+	assert.Equal(t, 1349, *result)
 }
 
 func TestPartTwoWithTestData(t *testing.T) {
-	result, err := Day5_part2("day_5_test_data")
+	result, err := Run("test_data", true)
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 14, *result)
+	assert.Equal(t, 43, *result)
 }
 
 func TestPartTwoWithRealData(t *testing.T) {
-	result, err := Day5_part2("day_5_data")
+	result, err := Run("data", true)
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 3, *result)
+	assert.Equal(t, 8277, *result)
 }
