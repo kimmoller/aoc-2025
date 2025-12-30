@@ -2,8 +2,6 @@ package main
 
 import (
 	"aoc2025/utils"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 func Run(path string) (*int, error) {
@@ -16,8 +14,6 @@ func Run(path string) (*int, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	spew.Dump(problems)
 
 	calculator := NewCalculator(problems)
 

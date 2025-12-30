@@ -3,8 +3,6 @@ package main
 import (
 	"strconv"
 	"strings"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Database struct {
@@ -85,7 +83,6 @@ func (d *Database) AllFreshIds() (*int, error) {
 		}
 
 		for i := bottom; i <= top; i++ {
-			spew.Dump("Add %d", i)
 			freshIds[i] = struct{}{}
 		}
 	}
