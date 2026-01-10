@@ -32,23 +32,15 @@ func (c *Center) Server(name string) (*Server, error) {
 	return nil, fmt.Errorf("server %s not found", name)
 }
 
-func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error) {
-	allPaths := [][]string{}
+func (c *Center) FindAllPaths(start, end string, strict bool) ([]string, error) {
+	allPaths := []string{}
 	startingServer, err := c.Server(start)
 	if err != nil {
 		return nil, err
 	}
-	for _, link := range startingServer.links {
-		path := []string{startingServer.name}
-		output := link.output
-		err := c.FindPath(&allPaths, path, output, end)
-		if err != nil {
-			return nil, err
-		}
-	}
+	err = c.FindPath(&allPaths, "", startingServer.name, end)
 
-	spew.Dump(fmt.Sprintf("Number of paths before check %d", len(allPaths)))
-	finalPaths := [][]string{}
+	finalPaths := []string{}
 	if strict {
 		for _, path := range allPaths {
 			if meetsRequirements(path) {
@@ -62,21 +54,18 @@ func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error
 	return finalPaths, nil
 }
 
-func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, nextServerName string, finalServerName string) error {
-	path := currentPath
-	path = append(path, nextServerName)
+func (c *Center) FindPath(finalPaths *[]string, currentPath string, currentServerName string, finalServerName string) error {
+	path := appendToPath(currentPath, currentServerName)
 
-	server, err := c.Server(nextServerName)
+	server, err := c.Server(currentServerName)
 	if err != nil {
 		return err
 	}
 
-	// This needs to somehow handle the branching paths
-	// We cannot just return here. Instead it has to create a new path per new link and somehow return all paths once they are done
 	for _, link := range server.links {
 		output := link.output
 		if output == finalServerName {
-			path = append(path, output)
+			path = appendToPath(path, output)
 			*finalPaths = append(*finalPaths, path)
 		} else {
 			err := c.FindPath(finalPaths, path, output, finalServerName)
@@ -89,17 +78,14 @@ func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, nextServ
 	return nil
 }
 
-func meetsRequirements(path []string) bool {
-	hasDac := false
-	hasFft := false
-	for _, server := range path {
-		if server == "dac" {
-			hasDac = true
-		}
-		if server == "fft" {
-			hasFft = true
-		}
-	}
+func appendToPath(path string, serverName string) string {
+	newPath := path + "," + serverName
+	return newPath
+}
+
+func meetsRequirements(path string) bool {
+	hasDac := strings.Contains(path, "dac")
+	hasFft := strings.Contains(path, "fft")
 
 	return hasDac && hasFft
 }
