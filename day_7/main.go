@@ -2,6 +2,8 @@ package main
 
 import (
 	"aoc2025/utils"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 func Run(path string) (*int, error) {
@@ -13,6 +15,7 @@ func Run(path string) (*int, error) {
 	teleporter := NewTeleporter(data)
 	teleporter.Start()
 
+	spew.Dump(len(teleporter.beams))
 	sum := len(teleporter.splitPositions)
 	return &sum, nil
 }

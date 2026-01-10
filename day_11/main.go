@@ -2,8 +2,6 @@ package main
 
 import (
 	"aoc2025/utils"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 func Run(path string) (*int, error) {
@@ -12,8 +10,18 @@ func Run(path string) (*int, error) {
 		return nil, err
 	}
 
-	spew.Dump(data)
+	center := NewCenter()
+	err = center.PopulateCenter(data)
+	if err != nil {
+		return nil, err
+	}
 
-	sum := 0
+	paths, err := center.FindAllPaths("you", "out")
+	if err != nil {
+		return nil, err
+	}
+
+	sum := len(paths)
+	// sum := 0
 	return &sum, nil
 }
