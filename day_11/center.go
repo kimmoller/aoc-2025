@@ -32,7 +32,7 @@ func (c *Center) Server(name string) (*Server, error) {
 	return nil, fmt.Errorf("server %s not found", name)
 }
 
-func (c *Center) FindAllPaths(start, end string) ([][]string, error) {
+func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error) {
 	allPaths := [][]string{}
 	startingServer, err := c.Server(start)
 	if err != nil {
@@ -47,7 +47,19 @@ func (c *Center) FindAllPaths(start, end string) ([][]string, error) {
 		}
 	}
 
-	return allPaths, nil
+	spew.Dump(fmt.Sprintf("Number of paths before check %d", len(allPaths)))
+	finalPaths := [][]string{}
+	if strict {
+		for _, path := range allPaths {
+			if meetsRequirements(path) {
+				finalPaths = append(finalPaths, path)
+			}
+		}
+	} else {
+		finalPaths = allPaths
+	}
+
+	return finalPaths, nil
 }
 
 func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, nextServerName string, finalServerName string) error {
@@ -75,6 +87,21 @@ func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, nextServ
 	}
 
 	return nil
+}
+
+func meetsRequirements(path []string) bool {
+	hasDac := false
+	hasFft := false
+	for _, server := range path {
+		if server == "dac" {
+			hasDac = true
+		}
+		if server == "fft" {
+			hasFft = true
+		}
+	}
+
+	return hasDac && hasFft
 }
 
 func (c *Center) PopulateCenter(data []string) error {

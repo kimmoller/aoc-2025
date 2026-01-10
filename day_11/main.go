@@ -4,7 +4,7 @@ import (
 	"aoc2025/utils"
 )
 
-func Run(path string) (*int, error) {
+func Run(path string, start string, end string, strict bool) (*int, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err
@@ -16,7 +16,7 @@ func Run(path string) (*int, error) {
 		return nil, err
 	}
 
-	paths, err := center.FindAllPaths("you", "out")
+	paths, err := center.FindAllPaths(start, end, strict)
 	if err != nil {
 		return nil, err
 	}
