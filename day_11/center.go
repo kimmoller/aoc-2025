@@ -38,13 +38,9 @@ func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error
 	if err != nil {
 		return nil, err
 	}
-	for _, link := range startingServer.links {
-		path := []string{startingServer.name}
-		output := link.output
-		err := c.FindPath(&allPaths, path, output, end)
-		if err != nil {
-			return nil, err
-		}
+	err = c.FindPath(&allPaths, []string{}, startingServer.name, end)
+	if err != nil {
+		return nil, err
 	}
 
 	spew.Dump(fmt.Sprintf("Number of paths before check %d", len(allPaths)))
@@ -62,28 +58,74 @@ func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error
 	return finalPaths, nil
 }
 
-func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, nextServerName string, finalServerName string) error {
-	path := currentPath
-	path = append(path, nextServerName)
+func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, currentServerName string, finalServerName string) error {
+	if currentServerName == finalServerName {
+		spew.Dump(fmt.Sprintf("Add %v to final paths", currentPath))
+		*finalPaths = append(*finalPaths, currentPath)
+		return nil
+	}
 
-	server, err := c.Server(nextServerName)
+	server, err := c.Server(currentServerName)
 	if err != nil {
 		return err
 	}
 
-	// This needs to somehow handle the branching paths
-	// We cannot just return here. Instead it has to create a new path per new link and somehow return all paths once they are done
+	if len(server.links) == 1 {
+
+	}
+
+	// knownPaths := server.paths
+
 	for _, link := range server.links {
 		output := link.output
-		if output == finalServerName {
-			path = append(path, output)
-			*finalPaths = append(*finalPaths, path)
-		} else {
-			err := c.FindPath(finalPaths, path, output, finalServerName)
-			if err != nil {
-				return err
-			}
+		newPath := append(currentPath, output)
+
+		// if len(knownPaths) > 0 {
+		// 	for _, knownPath := range knownPaths {
+		// 		if len(knownPath) > 0 && knownPath[0] == output {
+		// 			spew.Dump(fmt.Sprintf("Append known path %v to path %v", knownPath, path))
+		// 			// lastServerName = knownPath[len(knownPath)-1]
+		// 			lastServer, err := c.Server(knownPath[len(knownPath)-1])
+		// 			if err != nil {
+		// 				return err
+		// 			}
+
+		// 			path = append(path, knownPath...)
+		// 			spew.Dump(fmt.Sprintf("Find path for output %s with current path %v", output, path))
+		// 			for _, link := range lastServer.links {
+		// 				err = c.FindPath(finalPaths, path, link.output, finalServerName)
+		// 				if err != nil {
+		// 					return err
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
+
+		spew.Dump(fmt.Sprintf("Find path for output %s with current path %v", output, newPath))
+		err := c.FindPath(finalPaths, newPath, output, finalServerName)
+		if err != nil {
+			return err
 		}
+	}
+
+	// markKnownPaths(c, path)
+
+	return nil
+}
+
+func markKnownPaths(center *Center, path []string) error {
+	if len(path) == 0 {
+		return nil
+	}
+
+	for i, serverName := range path {
+		server, err := center.Server(serverName)
+		if err != nil {
+			return err
+		}
+		knownPath := path[i+1:]
+		server.AddPath(knownPath)
 	}
 
 	return nil
