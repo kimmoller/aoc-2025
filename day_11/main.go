@@ -22,6 +22,5 @@ func Run(path string, start string, end string, strict bool) (*int, error) {
 	}
 
 	sum := len(paths)
-	// sum := 0
 	return &sum, nil
 }
