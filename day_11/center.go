@@ -59,6 +59,7 @@ func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error
 
 func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, currentServerName string, finalServerName string) error {
 	if currentServerName == finalServerName {
+		spew.Dump(fmt.Sprintf("Found route out from server %s with path %v", currentServerName, currentPath))
 		*finalPaths = append(*finalPaths, currentPath)
 		return nil
 	}
@@ -70,6 +71,7 @@ func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, currentS
 
 	for _, link := range server.links {
 		output := link.output
+		spew.Dump(fmt.Sprintf("Go from %s to %s", server.name, output))
 		newPath := append(currentPath, output)
 
 		err := c.FindPath(finalPaths, newPath, output, finalServerName)
@@ -77,6 +79,8 @@ func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, currentS
 			return err
 		}
 	}
+
+	spew.Dump(fmt.Sprintf("Done with server %s with path %v", currentServerName, currentPath))
 
 	return nil
 }
@@ -149,7 +153,7 @@ func (c *Center) PopulateCenter(data []string) error {
 		}
 		links := []*Link{}
 		for _, output := range outputs {
-			link := NewLink(serverName, output)
+			link := NewLink(output)
 			links = append(links, link)
 		}
 		server.AddLinks(links)
