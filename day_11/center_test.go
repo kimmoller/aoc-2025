@@ -4,6 +4,7 @@ import (
 	"aoc2025/utils"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +22,8 @@ func TestKnownPaths(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	_, err = center.FindPath(&allPaths, []string{}, startingServer.name, "out")
+	paths, err := center.FindPath(&allPaths, []string{}, startingServer.name, "out")
+	spew.Dump(paths)
 
 	assert.Equal(t, 8, len(allPaths))
 }

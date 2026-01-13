@@ -39,7 +39,8 @@ func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error
 	if err != nil {
 		return nil, err
 	}
-	_, err = c.FindPath(&allPaths, []string{}, startingServer.name, end)
+	paths, err := c.FindPath(&allPaths, []string{}, startingServer.name, end)
+	spew.Dump(fmt.Sprintf("Final paths %v", paths))
 	if err != nil {
 		return nil, err
 	}
@@ -55,17 +56,13 @@ func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error
 		finalPaths = allPaths
 	}
 
-	// for _, server := range c.servers {
-	// 	spew.Dump(fmt.Sprintf("Server: %s, known path %v", server.name, server.paths))
-	// }
-
 	return finalPaths, nil
 }
 
-func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, currentServerName string, finalServerName string) ([]string, error) {
+func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, currentServerName string, finalServerName string) ([][]string, error) {
 	if currentServerName == finalServerName {
 		*finalPaths = append(*finalPaths, currentPath)
-		return currentPath, nil
+		return [][]string{currentPath}, nil
 	}
 
 	server, err := c.Server(currentServerName)
@@ -73,7 +70,7 @@ func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, currentS
 		return nil, err
 	}
 
-	path := []string{}
+	knownPaths := [][]string{}
 	for _, link := range server.links {
 		output := link.output
 		newPath := append(currentPath, output)
@@ -83,60 +80,53 @@ func (c *Center) FindPath(finalPaths *[][]string, currentPath []string, currentS
 			return nil, err
 		}
 
-		// TODO: This sort of works but now we would need to figure out how to recreate the necessary paths from the known paths
+		// Known path
+		paths := [][]string{}
 		if len(outputServer.paths) > 0 {
-			spew.Dump(fmt.Sprintf("Skip finding paths for server %s output %s", currentServerName, output))
-			spew.Dump(fmt.Sprintf("Output %s has known paths %v", output, outputServer.paths))
-			continue
-		}
-
-		path, err = c.FindPath(finalPaths, newPath, output, finalServerName)
-		if err != nil {
-			return nil, err
-		}
-
-		// FIX: Somehow the known paths get addded all wrong
-		if len(outputServer.paths) > 1 {
-			for _, knownPath := range outputServer.paths {
-				knownPaths := []string{output}
-				knownPaths = append(knownPaths, knownPath...)
-				spew.Dump(fmt.Sprintf("Multi: Server %s, Add path %v", server.name, knownPath))
-				server.AddPath(knownPaths)
+			spew.Dump(fmt.Sprintf("Current server %s, output %s already has known paths %v", currentServerName, output, outputServer.paths))
+			// Construct new paths with known paths
+			startOfPath := slices.Clone(newPath)
+			spew.Dump(fmt.Sprintf("Start of path: %v", startOfPath))
+			finalPaths := [][]string{}
+			for _, path := range outputServer.paths {
+				finalPath := append(startOfPath, path...)
+				finalPaths = append(finalPaths, finalPath)
 			}
+			spew.Dump(fmt.Sprintf("Server %s final paths %v", currentServerName, finalPaths))
+			paths = finalPaths
 		} else {
-			outputIndex := 0
-			for i := 0; i < len(path); i++ {
-				if path[i] == output {
-					outputIndex = i
-				}
+			// Unknown path
+			paths, err = c.FindPath(finalPaths, newPath, output, finalServerName)
+			if err != nil {
+				return nil, err
 			}
+		}
 
-			knownPath := slices.Clone(path)[outputIndex:]
-
-			spew.Dump(fmt.Sprintf("Single: Server %s, Add path %v", server.name, knownPath))
-			server.AddPath(knownPath)
+		for _, path := range paths {
+			knownPath := slices.Clone(path)
+			knownPaths = append(knownPaths, knownPath)
 		}
 	}
 
-	return path, nil
+	addKnownPathsToServer(server, knownPaths)
+
+	return knownPaths, nil
 }
 
-// func markKnownPaths(center *Center, path []string) error {
-// 	if len(path) == 0 {
-// 		return nil
-// 	}
-
-// 	for i, serverName := range path {
-// 		server, err := center.Server(serverName)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		knownPath := path[i+1:]
-// 		server.AddPath(knownPath)
-// 	}
-
-// 	return nil
-// }
+func addKnownPathsToServer(server *Server, knownPaths [][]string) {
+	for _, knownPath := range knownPaths {
+		copy := slices.Clone(knownPath)
+		serverIndex := 0
+		for i, serverName := range copy {
+			if serverName == server.name {
+				serverIndex = i
+			}
+		}
+		subPath := copy[serverIndex+1:]
+		spew.Dump(fmt.Sprintf("Server %s, add known path %v", server.name, subPath))
+		server.AddPath(subPath)
+	}
+}
 
 func meetsRequirements(path []string) bool {
 	hasDac := false
