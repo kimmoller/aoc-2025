@@ -71,7 +71,6 @@ func (c *Center) FindPath(currentPath []string, currentServerName string, finalS
 	for _, link := range server.links {
 		output := link.output
 		newPath := append(currentPath, output)
-		spew.Dump(fmt.Sprintf("Find path from server %s to output %s", currentServerName, output))
 
 		outputServer, err := c.Server(output)
 		if err != nil {
@@ -80,7 +79,6 @@ func (c *Center) FindPath(currentPath []string, currentServerName string, finalS
 
 		paths := [][]string{}
 		if len(outputServer.paths) > 0 {
-			spew.Dump(fmt.Sprintf("Output server %s contains known path %v", output, outputServer.paths))
 			// Construct new paths with known paths
 			startOfPath := slices.Clone(newPath)
 			finalPaths := [][]string{}
@@ -103,7 +101,9 @@ func (c *Center) FindPath(currentPath []string, currentServerName string, finalS
 		}
 	}
 
-	addKnownPathsToServer(server, knownPaths)
+	if len(server.links) > 1 {
+		addKnownPathsToServer(server, knownPaths)
+	}
 
 	return knownPaths, nil
 }
