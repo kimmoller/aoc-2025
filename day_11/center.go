@@ -33,12 +33,55 @@ func (c *Center) Server(name string) (*Server, error) {
 	return nil, fmt.Errorf("server %s not found", name)
 }
 
-func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error) {
-	startingServer, err := c.Server(start)
+func (c *Center) AmountOfValidPaths(start, end string, strict bool) (*int, error) {
+	dacSum, err := c.PathsFromStartToEnd("dac", end, 1)
 	if err != nil {
 		return nil, err
 	}
-	paths, err := c.FindPath([]string{}, startingServer.name, end)
+	spew.Dump(fmt.Sprintf("Dac sum: %d", *dacSum))
+
+	fftSum, err := c.PathsFromStartToEnd("fft", "dac", *dacSum)
+	if err != nil {
+		return nil, err
+	}
+	spew.Dump(fmt.Sprintf("Fft sum: %d", *fftSum))
+
+	return fftSum, nil
+}
+
+func (c *Center) PathsFromStartToEnd(start, end string, multiplier int) (*int, error) {
+	sum := 0
+	err := c.TraverseGraph(&sum, []string{start}, start, end, multiplier)
+	if err != nil {
+		return nil, err
+	}
+	return &sum, nil
+}
+
+func (c *Center) TraverseGraph(sum *int, path []string, start, end string, addition int) error {
+	server, err := c.Server(start)
+	if err != nil {
+		return err
+	}
+
+	for _, link := range server.links {
+		if link.output == end {
+			*sum += addition
+			spew.Dump(fmt.Sprintf("Current sum %d", *sum))
+			continue
+		}
+		pathWithOutput := append(path, link.output)
+		err := c.TraverseGraph(sum, pathWithOutput, link.output, end, addition)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error) {
+	paths, err := c.FindPath([]string{}, start, end)
 	if err != nil {
 		return nil, err
 	}
