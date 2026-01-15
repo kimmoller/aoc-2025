@@ -34,39 +34,41 @@ func (c *Center) Server(name string) (*Server, error) {
 }
 
 func (c *Center) AmountOfValidPaths(start, end string, strict bool) (*int64, error) {
-	dacSum, err := c.PathsFromStartToEnd("dac", end, 1, false)
+	dacSum, err := c.PathsFromStartToEnd("dac", end, false)
 	if err != nil {
 		return nil, err
 	}
 	spew.Dump(fmt.Sprintf("Dac sum: %d", *dacSum))
 
-	fftSum, err := c.PathsFromStartToEnd("fft", "dac", *dacSum, true)
+	fftSum, err := c.PathsFromStartToEnd("fft", "dac", true)
 	if err != nil {
 		return nil, err
 	}
 	spew.Dump(fmt.Sprintf("Fft sum: %d", *fftSum))
 
-	sum, err := c.PathsFromStartToEnd(start, "fft", *fftSum, true)
+	svrSum, err := c.PathsFromStartToEnd(start, "fft", true)
 	if err != nil {
 		return nil, err
 	}
-	spew.Dump(fmt.Sprintf("Final sum: %d", *sum))
+	spew.Dump(fmt.Sprintf("Svr sum: %d", *svrSum))
 
-	return sum, nil
+	finalSum := *dacSum * *fftSum * *svrSum
+
+	return &finalSum, nil
 }
 
-func (c *Center) PathsFromStartToEnd(start, end string, multiplier int64, memorize bool) (*int64, error) {
+func (c *Center) PathsFromStartToEnd(start, end string, memorize bool) (*int64, error) {
 	var sum int64 = 0
 	seenRelevantNode := false
 	uselessNodes := map[string]struct{}{}
-	err := c.TraverseGraph(uselessNodes, &sum, []string{start}, start, end, multiplier, memorize, &seenRelevantNode)
+	err := c.TraverseGraph(uselessNodes, &sum, []string{start}, start, end, memorize, &seenRelevantNode)
 	if err != nil {
 		return nil, err
 	}
 	return &sum, nil
 }
 
-func (c *Center) TraverseGraph(uselessNodes map[string]struct{}, sum *int64, path []string, start, end string, addition int64, memorize bool, seenRelevantNode *bool) error {
+func (c *Center) TraverseGraph(uselessNodes map[string]struct{}, sum *int64, path []string, start, end string, memorize bool, seenRelevantNode *bool) error {
 	server, err := c.Server(start)
 	if err != nil {
 		return err
@@ -82,15 +84,15 @@ func (c *Center) TraverseGraph(uselessNodes map[string]struct{}, sum *int64, pat
 		if link.output == end {
 			if memorize {
 				if *seenRelevantNode {
-					*sum += addition
+					*sum++
 				}
 			} else {
-				*sum += addition
+				*sum++
 			}
 			continue
 		}
 		pathWithOutput := append(path, link.output)
-		err := c.TraverseGraph(uselessNodes, sum, pathWithOutput, link.output, end, addition, memorize, seenRelevantNode)
+		err := c.TraverseGraph(uselessNodes, sum, pathWithOutput, link.output, end, memorize, seenRelevantNode)
 		if err != nil {
 			return err
 		}
