@@ -43,7 +43,7 @@ func TestSumBasedPartTwoWithTestData(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 2, *result)
+	assert.Equal(t, int64(2), *result)
 }
 
 func TestSumBasedPartTwoWithRealData(t *testing.T) {
@@ -51,5 +51,5 @@ func TestSumBasedPartTwoWithRealData(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 4277556, *result)
+	assert.Equal(t, int64(553204221431080), *result)
 }

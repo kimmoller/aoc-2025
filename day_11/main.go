@@ -25,7 +25,7 @@ func Run(path string, start string, end string, strict bool) (*int, error) {
 	return &sum, nil
 }
 
-func RunSumBased(path string, start, end string, strict bool) (*int, error) {
+func RunSumBased(path string, start, end string, strict bool) (*int64, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err
