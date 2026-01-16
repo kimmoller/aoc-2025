@@ -4,13 +4,13 @@ import (
 	"aoc2025/utils"
 )
 
-func Run(path string) (*int, error) {
+func Run(path string, isAlien bool) (*int, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err
 	}
 
-	problems, err := ProblemsFromData(data)
+	problems, err := ProblemsFromData(data, isAlien)
 	if err != nil {
 		return nil, err
 	}
