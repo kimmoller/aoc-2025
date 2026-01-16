@@ -2,216 +2,95 @@ package main
 
 import (
 	"fmt"
-	"slices"
 	"strings"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Center struct {
-	servers []*Server
+	servers []Server
 }
 
 func NewCenter() *Center {
 	return &Center{}
 }
 
-func (c *Center) AddServer(server *Server) {
+func (c *Center) AddServer(server Server) {
 	c.servers = append(c.servers, server)
 }
 
-func (c *Center) Servers() []*Server {
+func (c *Center) Servers() []Server {
 	return c.servers
 }
 
 func (c *Center) Server(name string) (*Server, error) {
 	for _, server := range c.servers {
 		if server.name == name {
-			return server, nil
+			return &server, nil
 		}
 	}
 	return nil, fmt.Errorf("server %s not found", name)
 }
 
-func (c *Center) AmountOfValidPaths(start, end string, strict bool) (*int64, error) {
-	dacSum, err := c.PathsFromStartToEnd("dac", end, false)
-	if err != nil {
-		return nil, err
-	}
-	spew.Dump(fmt.Sprintf("Dac sum: %d", *dacSum))
-
-	fftSum, err := c.PathsFromStartToEnd("fft", "dac", true)
-	if err != nil {
-		return nil, err
-	}
-	spew.Dump(fmt.Sprintf("Fft sum: %d", *fftSum))
-
-	svrSum, err := c.PathsFromStartToEnd(start, "fft", true)
-	if err != nil {
-		return nil, err
-	}
-	spew.Dump(fmt.Sprintf("Svr sum: %d", *svrSum))
-
-	finalSum := *dacSum * *fftSum * *svrSum
-
-	return &finalSum, nil
+func (c *Center) Paths(start, end string) (int, error) {
+	return c.getPathsUsingDFS(start, make(map[string]int), end)
 }
 
-func (c *Center) PathsFromStartToEnd(start, end string, memorize bool) (*int64, error) {
-	var sum int64 = 0
-	seenRelevantNode := false
-	uselessNodes := map[string]struct{}{}
-	err := c.TraverseGraph(uselessNodes, &sum, []string{start}, start, end, memorize, &seenRelevantNode)
+func (c *Center) PathsWithMiddleSteps(start, end string) (int, error) {
+	svrToFft, err := c.getPathsUsingDFS(start, make(map[string]int), "fft")
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	return &sum, nil
+	fftToDac, err := c.getPathsUsingDFS("fft", make(map[string]int), "dac")
+	if err != nil {
+		return 0, err
+	}
+	dacToOut, err := c.getPathsUsingDFS("dac", make(map[string]int), end)
+	if err != nil {
+		return 0, err
+	}
+	svrToDac, err := c.getPathsUsingDFS(start, make(map[string]int), "dac")
+	if err != nil {
+		return 0, err
+	}
+	dacToFft, err := c.getPathsUsingDFS("dac", make(map[string]int), "fft")
+	if err != nil {
+		return 0, err
+	}
+	fftToOut, err := c.getPathsUsingDFS("fft", make(map[string]int), end)
+	if err != nil {
+		return 0, err
+	}
+	return (svrToFft * fftToDac * dacToOut) + (svrToDac * dacToFft * fftToOut), nil
 }
 
-func (c *Center) TraverseGraph(uselessNodes map[string]struct{}, sum *int64, path []string, start, end string, memorize bool, seenRelevantNode *bool) error {
-	server, err := c.Server(start)
-	if err != nil {
-		return err
+func (c *Center) getPathsUsingDFS(currentServer string, visited map[string]int, end string) (int, error) {
+	if currentServer == end {
+		return 1, nil
 	}
 
+	if count, ok := visited[currentServer]; ok {
+		return count, nil
+	}
+
+	server, err := c.Server(currentServer)
+	if err != nil {
+		return 0, err
+	}
+
+	count := 0
 	for _, link := range server.links {
-		if memorize && link.output == end {
-			*seenRelevantNode = true
-		}
-		if _, ok := uselessNodes[start]; memorize && ok {
-			continue
-		}
-		if link.output == end {
-			if memorize {
-				if *seenRelevantNode {
-					*sum++
-				}
-			} else {
-				*sum++
-			}
-			continue
-		}
-		pathWithOutput := append(path, link.output)
-		err := c.TraverseGraph(uselessNodes, sum, pathWithOutput, link.output, end, memorize, seenRelevantNode)
+		value, err := c.getPathsUsingDFS(link.output, visited, end)
 		if err != nil {
-			return err
+			return 0, err
 		}
-		if memorize && link.output == end {
-			*seenRelevantNode = false
-		}
+		count += value
 	}
 
-	if memorize && !*seenRelevantNode {
-		if _, ok := uselessNodes[start]; !ok {
-			uselessNodes[start] = struct{}{}
-		}
-	}
-
-	return nil
-}
-
-func (c *Center) FindAllPaths(start, end string, strict bool) ([][]string, error) {
-	paths, err := c.FindPath([]string{}, start, end)
-	if err != nil {
-		return nil, err
-	}
-
-	finalPaths := [][]string{}
-	if strict {
-		for _, path := range paths {
-			if meetsRequirements(path) {
-				finalPaths = append(finalPaths, path)
-			}
-		}
-	} else {
-		finalPaths = paths
-	}
-
-	return finalPaths, nil
-}
-
-func (c *Center) FindPath(currentPath []string, currentServerName string, finalServerName string) ([][]string, error) {
-	if currentServerName == finalServerName {
-		return [][]string{currentPath}, nil
-	}
-
-	server, err := c.Server(currentServerName)
-	if err != nil {
-		return nil, err
-	}
-
-	knownPaths := [][]string{}
-	for _, link := range server.links {
-		output := link.output
-		newPath := append(currentPath, output)
-
-		outputServer, err := c.Server(output)
-		if err != nil {
-			return nil, err
-		}
-
-		paths := [][]string{}
-		if len(outputServer.paths) > 0 {
-			// Construct new paths with known paths
-			startOfPath := slices.Clone(newPath)
-			finalPaths := [][]string{}
-			for _, path := range outputServer.paths {
-				finalPath := append(startOfPath, path...)
-				finalPaths = append(finalPaths, finalPath)
-			}
-			paths = finalPaths
-		} else {
-			// Unknown path
-			paths, err = c.FindPath(newPath, output, finalServerName)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		for _, path := range paths {
-			knownPath := slices.Clone(path)
-			knownPaths = append(knownPaths, knownPath)
-		}
-	}
-
-	if len(server.links) > 1 {
-		addKnownPathsToServer(server, knownPaths)
-	}
-
-	return knownPaths, nil
-}
-
-func addKnownPathsToServer(server *Server, knownPaths [][]string) {
-	for _, knownPath := range knownPaths {
-		copy := slices.Clone(knownPath)
-		serverIndex := 0
-		for i, serverName := range copy {
-			if serverName == server.name {
-				serverIndex = i
-			}
-		}
-		subPath := copy[serverIndex+1:]
-		server.AddPath(subPath)
-	}
-}
-
-func meetsRequirements(path []string) bool {
-	hasDac := false
-	hasFft := false
-	for _, server := range path {
-		if server == "dac" {
-			hasDac = true
-		}
-		if server == "fft" {
-			hasFft = true
-		}
-	}
-
-	return hasDac && hasFft
+	visited[currentServer] = count
+	return count, nil
 }
 
 func (c *Center) PopulateCenter(data []string) error {
-	servers := []*Server{}
+	servers := []Server{}
 	serverLinks := map[string][]string{}
 	for _, input := range data {
 		parts := strings.Split(input, ":")
@@ -233,24 +112,24 @@ func (c *Center) PopulateCenter(data []string) error {
 		serverLinks[serverName] = filteredOutputs
 	}
 
+	serversWithLinks := []Server{}
+	for _, server := range servers {
+		links := []Link{}
+		if outputs, ok := serverLinks[server.name]; ok {
+			for _, output := range outputs {
+				link := NewLink(output)
+				links = append(links, link)
+			}
+			server.AddLinks(links)
+		}
+		serversWithLinks = append(serversWithLinks, server)
+	}
+
 	// Create out server
 	outServer := NewServer("out")
-	servers = append(servers, outServer)
-	c.servers = servers
+	serversWithLinks = append(serversWithLinks, outServer)
 
-	for serverName, outputs := range serverLinks {
-		server, err := c.Server(serverName)
-		if err != nil {
-			spew.Dump(fmt.Errorf("Error while getting server %s, %v", serverName, err))
-			return err
-		}
-		links := []*Link{}
-		for _, output := range outputs {
-			link := NewLink(output)
-			links = append(links, link)
-		}
-		server.AddLinks(links)
-	}
+	c.servers = serversWithLinks
 
 	return nil
 }

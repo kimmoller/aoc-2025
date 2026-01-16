@@ -35,21 +35,5 @@ func TestPartTwoWithRealData(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 4277556, *result)
-}
-
-func TestSumBasedPartTwoWithTestData(t *testing.T) {
-	result, err := RunSumBased("test_data_2", "svr", "out", true)
-	if err != nil {
-		panic(err)
-	}
-	assert.Equal(t, int64(2), *result)
-}
-
-func TestSumBasedPartTwoWithRealData(t *testing.T) {
-	result, err := RunSumBased("data", "svr", "out", true)
-	if err != nil {
-		panic(err)
-	}
-	assert.Equal(t, int64(553204221431080), *result)
+	assert.Equal(t, 553204221431080, *result)
 }

@@ -2,13 +2,17 @@ package main
 
 import (
 	"aoc2025/utils"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
-func Run(path string, start string, end string, strict bool) (*int, error) {
+func Run(path string, start string, end string, withMiddleNodes bool) (*int, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err
 	}
+
+	spew.Dump(data)
 
 	center := NewCenter()
 	err = center.PopulateCenter(data)
@@ -16,31 +20,17 @@ func Run(path string, start string, end string, strict bool) (*int, error) {
 		return nil, err
 	}
 
-	paths, err := center.FindAllPaths(start, end, strict)
+	if withMiddleNodes {
+		paths, err := center.PathsWithMiddleSteps(start, end)
+		if err != nil {
+			return nil, err
+		}
+		return &paths, nil
+	}
+	paths, err := center.Paths(start, end)
 	if err != nil {
 		return nil, err
 	}
 
-	sum := len(paths)
-	return &sum, nil
-}
-
-func RunSumBased(path string, start, end string, strict bool) (*int64, error) {
-	data, err := utils.ReadData(path)
-	if err != nil {
-		return nil, err
-	}
-
-	center := NewCenter()
-	err = center.PopulateCenter(data)
-	if err != nil {
-		return nil, err
-	}
-
-	sum, err := center.AmountOfValidPaths(start, end, strict)
-	if err != nil {
-		return nil, err
-	}
-
-	return sum, nil
+	return &paths, nil
 }
