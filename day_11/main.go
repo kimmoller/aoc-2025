@@ -2,8 +2,6 @@ package main
 
 import (
 	"aoc2025/utils"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 func Run(path string, start string, end string, withMiddleNodes bool) (*int, error) {
@@ -11,8 +9,6 @@ func Run(path string, start string, end string, withMiddleNodes bool) (*int, err
 	if err != nil {
 		return nil, err
 	}
-
-	spew.Dump(data)
 
 	center := NewCenter()
 	err = center.PopulateCenter(data)
