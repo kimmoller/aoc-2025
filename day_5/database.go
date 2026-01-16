@@ -1,12 +1,19 @@
 package main
 
 import (
+	"cmp"
+	"slices"
 	"strconv"
 	"strings"
 )
 
+type Range struct {
+	start int
+	end   int
+}
+
 type Database struct {
-	ranges []string
+	ranges []Range
 	ids    []int
 }
 
@@ -20,8 +27,8 @@ func NewDatabase(data []string) (*Database, error) {
 	return &database, nil
 }
 
-func initDatabase(data []string) ([]string, []int, error) {
-	ranges := []string{}
+func initDatabase(data []string) ([]Range, []int, error) {
+	ranges := []Range{}
 	ids := []int{}
 	for _, input := range data {
 		if input == "" {
@@ -29,7 +36,17 @@ func initDatabase(data []string) ([]string, []int, error) {
 		}
 		isRange := strings.Contains(input, "-")
 		if isRange {
-			ranges = append(ranges, input)
+			values := strings.Split(input, "-")
+			start, err := strconv.Atoi(values[0])
+			if err != nil {
+				return nil, nil, err
+			}
+			end, err := strconv.Atoi(values[1])
+			if err != nil {
+				return nil, nil, err
+			}
+			numRange := Range{start: start, end: end}
+			ranges = append(ranges, numRange)
 		} else {
 			id, err := strconv.Atoi(input)
 			if err != nil {
@@ -46,17 +63,7 @@ func (d *Database) FreshIds() ([]int, error) {
 	for _, id := range d.ids {
 		isFresh := false
 		for _, value := range d.ranges {
-			values := strings.Split(value, "-")
-			bottom, err := strconv.Atoi(values[0])
-			if err != nil {
-				return nil, err
-			}
-			top, err := strconv.Atoi(values[1])
-			if err != nil {
-				return nil, err
-			}
-
-			if id >= bottom && id <= top {
+			if id >= value.start && id <= value.end {
 				isFresh = true
 				break
 			}
@@ -70,24 +77,35 @@ func (d *Database) FreshIds() ([]int, error) {
 }
 
 func (d *Database) AllFreshIds() (*int, error) {
-	freshIds := map[int]struct{}{}
-	for _, input := range d.ranges {
-		values := strings.Split(input, "-")
-		bottom, err := strconv.Atoi(values[0])
-		if err != nil {
-			return nil, err
+	freshIds := 0
+	slices.SortFunc(d.ranges, func(a, b Range) int {
+		if a.start == b.start {
+			return cmp.Compare(a.end, b.end)
 		}
-		top, err := strconv.Atoi(values[1])
-		if err != nil {
-			return nil, err
+		return cmp.Compare(a.start, b.start)
+	})
+
+	mergedRanges := []Range{}
+	current := d.ranges[0]
+	for i := 1; i < len(d.ranges); i++ {
+		next := d.ranges[i]
+		if next.start > current.end {
+			mergedRanges = append(mergedRanges, current)
+			current = next
+			continue
 		}
 
-		for i := bottom; i <= top; i++ {
-			freshIds[i] = struct{}{}
+		if next.start <= current.end && next.end <= current.end {
+			continue
 		}
+
+		current.end = next.end
+	}
+	mergedRanges = append(mergedRanges, current)
+
+	for _, value := range mergedRanges {
+		freshIds += value.end - value.start + 1
 	}
 
-	sum := len(freshIds)
-
-	return &sum, nil
+	return &freshIds, nil
 }
