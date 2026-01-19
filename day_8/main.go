@@ -2,18 +2,24 @@ package main
 
 import (
 	"aoc2025/utils"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
-func Run(path string) (*int, error) {
+func Run(path string, connections int) (*int, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err
 	}
 
-	spew.Dump(data)
+	boxes, err := JunctionBoxes(data)
+	if err != nil {
+		return nil, err
+	}
 
-	sum := 0
-	return &sum, nil
+	circuits := Circuits(connections, boxes)
+	sum, err := SumOfThreeLargest(circuits)
+	if err != nil {
+		return nil, err
+	}
+
+	return sum, nil
 }
