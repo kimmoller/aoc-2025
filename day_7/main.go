@@ -29,7 +29,7 @@ func RunQuantum(path string) (*int, error) {
 	nodes, structure := parseNodes(data)
 	firstNode, nodesWithLinks := buildLinks(nodes, structure)
 
-	sum := findTimelinesWithDFS(firstNode, nodesWithLinks)
+	sum := findTimelinesWithDFS(firstNode, nodesWithLinks, map[string]int{})
 
 	return &sum, nil
 }

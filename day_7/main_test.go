@@ -31,9 +31,9 @@ func TestPartTwoWithTestData(t *testing.T) {
 }
 
 func TestPartTwoWithRealData(t *testing.T) {
-	result, err := Run("data")
+	result, err := RunQuantum("data")
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 1499, *result)
+	assert.Equal(t, 24743903847942, *result)
 }

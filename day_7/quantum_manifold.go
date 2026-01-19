@@ -76,15 +76,19 @@ func findClosestNode(node Node, xPosition int, structure map[int][]Node) *Node {
 	return nil
 }
 
-func findTimelinesWithDFS(currentNode Node, nodes map[string]Node) int {
+func findTimelinesWithDFS(currentNode Node, nodes map[string]Node, visited map[string]int) int {
 	if len(currentNode.links) == 0 {
 		return 2
+	}
+
+	if count, ok := visited[currentNode.id]; ok {
+		return count
 	}
 
 	count := 0
 	for _, link := range currentNode.links {
 		if node, ok := nodes[link.id]; ok {
-			value := findTimelinesWithDFS(node, nodes)
+			value := findTimelinesWithDFS(node, nodes, visited)
 			count += value
 		}
 	}
@@ -94,5 +98,6 @@ func findTimelinesWithDFS(currentNode Node, nodes map[string]Node) int {
 	if currentNode.point.y != 0 && len(currentNode.links) == 1 {
 		count++
 	}
+	visited[currentNode.id] = count
 	return count
 }
