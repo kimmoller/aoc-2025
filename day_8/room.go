@@ -1,143 +1,159 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"slices"
 	"strconv"
 	"strings"
 )
 
-type JunctionBox struct {
-	id      int
-	x       int
-	y       int
-	z       int
-	circuit int
+type Point struct {
+	id int
+	x  int
+	y  int
+	z  int
 }
 
-func JunctionBoxes(data []string) (map[int]JunctionBox, error) {
-	boxes := map[int]JunctionBox{}
-	for i, point := range data {
-		points := strings.Split(point, ",")
-		x, err := strconv.Atoi(points[0])
-		if err != nil {
-			return nil, err
-		}
-		y, err := strconv.Atoi(points[1])
-		if err != nil {
-			return nil, err
-		}
-		z, err := strconv.Atoi(points[2])
-		if err != nil {
-			return nil, err
-		}
-		box := JunctionBox{id: i, x: x, y: y, z: z}
-		boxes[i] = box
+type Pair struct {
+	b1       int
+	b2       int
+	distance float64
+}
+
+func SumOfLargest(data []string, connections int) (*int, error) {
+	allPoints, boxes, err := points(data)
+	if err != nil {
+		return nil, err
 	}
-	return boxes, nil
-}
 
-func SumOfThreeLargest(circuits map[int][]JunctionBox) (*int, error) {
+	storage := NewStorage(boxes)
+
+	allPairs := pairs(allPoints, connections)
+
+	allCircuits, err := circuits(allPairs, storage)
+	if err != nil {
+		return nil, err
+	}
+
 	sizes := []int{}
-	for _, circuit := range circuits {
+	for _, circuit := range allCircuits {
 		sizes = append(sizes, len(circuit))
 	}
 	slices.Sort(sizes)
 	slices.Reverse(sizes)
-	if len(sizes) < 3 {
-		return nil, fmt.Errorf("Not enough circuits")
-	}
-
 	sum := sizes[0] * sizes[1] * sizes[2]
 	return &sum, nil
 }
 
-func Circuits(connections int, boxes map[int]JunctionBox) map[int][]JunctionBox {
-	lastDistance := float64(0)
-	rollingId := 1
-	circuits := map[int][]JunctionBox{}
-	for i := 0; i < connections; i++ {
-		distance, box1, box2 := closestPair(lastDistance, boxes)
-		lastDistance = distance
-
-		// They are in the same circuit, nothing happens
-		if box1.circuit != 0 && box2.circuit != 0 && (box1.circuit == box2.circuit) {
-			continue
+func points(data []string) ([]Point, map[int]*JunctionBox, error) {
+	points := []Point{}
+	boxes := map[int]*JunctionBox{}
+	for i, item := range data {
+		coordinates := strings.Split(item, ",")
+		x, err := strconv.Atoi(coordinates[0])
+		if err != nil {
+			return nil, nil, err
 		}
-
-		// Both are in different circuits so the circuits are merged
-		if box1.circuit != 0 && box2.circuit != 0 {
-			if _, ok := circuits[box1.circuit]; ok {
-				if _, ok := circuits[box2.circuit]; ok {
-					secondCircuit := slices.Clone(circuits[box2.circuit])
-					for j := 0; j < len(secondCircuit); j++ {
-						secondCircuit[j].circuit = box1.circuit
-					}
-					circuits[box1.circuit] = append(circuits[box1.circuit], secondCircuit...)
-					circuits[box2.circuit] = []JunctionBox{}
-				}
-			}
-			continue
+		y, err := strconv.Atoi(coordinates[1])
+		if err != nil {
+			return nil, nil, err
 		}
-
-		// Place Box 2 into Box 1 circuit
-		if box1.circuit != 0 && box2.circuit == 0 {
-			if box, ok := boxes[box2.id]; ok {
-				box.circuit = box1.circuit
-				boxes[box.id] = box
-				if _, ok := circuits[box1.circuit]; ok {
-					circuits[box1.circuit] = append(circuits[box1.circuit], box)
-				}
-			}
-			continue
+		z, err := strconv.Atoi(coordinates[2])
+		if err != nil {
+			return nil, nil, err
 		}
-
-		// Place Box 1 into Box 2 circuit
-		if box1.circuit == 0 && box2.circuit != 0 {
-			if box, ok := boxes[box1.id]; ok {
-				box.circuit = box2.circuit
-				boxes[box.id] = box
-				if _, ok := circuits[box2.circuit]; ok {
-					circuits[box2.circuit] = append(circuits[box2.circuit], box)
-				}
-			}
-			continue
-		}
-
-		circuit := []JunctionBox{}
-		if box, ok := boxes[box1.id]; ok {
-			box.circuit = rollingId
-			boxes[box.id] = box
-			circuit = append(circuit, box)
-		}
-		if box, ok := boxes[box2.id]; ok {
-			box.circuit = rollingId
-			boxes[box.id] = box
-			circuit = append(circuit, box)
-		}
-		circuits[rollingId] = circuit
-		rollingId++
+		point := Point{id: i, x: x, y: y, z: z}
+		points = append(points, point)
+		boxes[i] = &JunctionBox{id: i}
 	}
-	return circuits
+	return points, boxes, nil
 }
 
-func closestPair(lastDistance float64, boxes map[int]JunctionBox) (float64, JunctionBox, JunctionBox) {
-	shortestDistance := float64(0)
-	var box1 JunctionBox
-	var box2 JunctionBox
-	for _, first := range boxes {
-		for _, second := range boxes {
+func pairs(points []Point, numberOfPairs int) []Pair {
+	pairs := []Pair{}
+	uniqueDistances := map[float64]struct{}{}
+	for _, first := range points {
+		for _, second := range points {
 			if first == second {
 				continue
 			}
+
 			distance := math.Sqrt(math.Pow(float64((first.x-second.x)), 2) + math.Pow(float64((first.y-second.y)), 2) + math.Pow(float64((first.z-second.z)), 2))
-			if (shortestDistance == 0 || shortestDistance > distance) && distance > lastDistance {
-				shortestDistance = distance
-				box1 = first
-				box2 = second
+			if _, ok := uniqueDistances[distance]; ok {
+				continue
+			}
+
+			pair := Pair{b1: first.id, b2: second.id, distance: distance}
+			pairs = append(pairs, pair)
+			uniqueDistances[distance] = struct{}{}
+		}
+	}
+	slices.SortFunc(pairs, func(a Pair, b Pair) int {
+		if a.distance < b.distance {
+			return -1
+		}
+		if a.distance > b.distance {
+			return 1
+		}
+		return 0
+	})
+	return pairs[:numberOfPairs]
+}
+
+func circuits(pairs []Pair, storage *Storage) (map[int][]int, error) {
+	allCircuits := map[int][]int{}
+	rollingId := 1
+	for _, pair := range pairs {
+		b1, err := storage.Box(pair.b1)
+		if err != nil {
+			return nil, err
+		}
+		b2, err := storage.Box(pair.b2)
+		if err != nil {
+			return nil, err
+		}
+
+		if b1.circuit != 0 && b2.circuit != 0 && (b1.circuit == b2.circuit) {
+			// Skipping as both boxes are already in the same circuit
+		} else if b1.circuit != 0 && b2.circuit != 0 {
+			err := mergeCircuits(b1.circuit, b2.circuit, allCircuits, storage)
+			if err != nil {
+				return nil, err
+			}
+		} else if b1.circuit != 0 && b2.circuit == 0 {
+			placeIntoCircuit(b2, b1.circuit, allCircuits)
+		} else if b1.circuit == 0 && b2.circuit != 0 {
+			placeIntoCircuit(b1, b2.circuit, allCircuits)
+		} else {
+			b1.SetCircuit(rollingId)
+			b2.SetCircuit(rollingId)
+			allCircuits[rollingId] = []int{b1.id, b2.id}
+			rollingId++
+		}
+	}
+
+	return allCircuits, nil
+}
+
+func mergeCircuits(c1 int, c2 int, allCircuits map[int][]int, storage *Storage) error {
+	if firstCircuit, ok := allCircuits[c1]; ok {
+		if secondCircuit, ok := allCircuits[c2]; ok {
+			mergedCircuit := slices.Concat(firstCircuit, secondCircuit)
+			allCircuits[c1] = mergedCircuit
+			// Update boxes in second circuit
+			for _, boxId := range secondCircuit {
+				box, err := storage.Box(boxId)
+				if err != nil {
+					return err
+				}
+				box.SetCircuit(c1)
 			}
 		}
 	}
-	return shortestDistance, box1, box2
+	return nil
+}
+
+func placeIntoCircuit(box *JunctionBox, circuit int, allCircuits map[int][]int) {
+	box.SetCircuit(circuit)
+	allCircuits[circuit] = append(allCircuits[circuit], box.id)
 }
