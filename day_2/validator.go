@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 const (
@@ -60,16 +63,25 @@ func complexValidation(ids []string) []string {
 
 func invalidIds(ids []string) []string {
 	invalidIds := []string{}
+	timeBuildingDividers := int64(0)
+	timeValidating := int64(0)
+	dividerCache := map[int][]int{}
 	for _, id := range ids {
 		length := len(id)
 
 		dividers := []int{}
-		for i := 1; i < length; i++ {
-			if length%i == 0 {
-				dividers = append(dividers, i)
+		if cached, ok := dividerCache[length]; ok {
+			dividers = cached
+		} else {
+			for i := 1; i < length; i++ {
+				if length%i == 0 {
+					dividers = append(dividers, i)
+				}
 			}
+			dividerCache[length] = dividers
 		}
 
+		startValidation := time.Now()
 		for _, divider := range dividers {
 			amountOfParts := length / divider
 			startOfSplit := 0
@@ -85,7 +97,11 @@ func invalidIds(ids []string) []string {
 				break
 			}
 		}
+		done := time.Since(startValidation)
+		timeValidating += done.Nanoseconds()
 	}
+	spew.Dump(fmt.Sprintf("Took %d milliseconds to build dividers", timeBuildingDividers/1000000))
+	spew.Dump(fmt.Sprintf("Took %d milliseconds validating", timeValidating/1000000))
 	return invalidIds
 }
 
