@@ -105,17 +105,6 @@ func invalidIds(ids []string) []string {
 	return invalidIds
 }
 
-func isValidSetOfParts(parts []string) bool {
-	valid := false
-	for i := 1; i < len(parts); i++ {
-		if !strings.EqualFold(parts[i-1], parts[i]) {
-			valid = true
-			break
-		}
-	}
-	return valid
-}
-
 func (v *Validator) toStrings() []string {
 	idsAsStrings := []string{}
 	for _, id := range v.ids {
