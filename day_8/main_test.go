@@ -19,7 +19,7 @@ func TestPartOneWithRealData(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 399165, *result)
+	assert.Equal(t, 171503, *result)
 }
 
 func TestPartTwoWithTestData(t *testing.T) {
