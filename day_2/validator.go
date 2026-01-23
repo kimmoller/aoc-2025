@@ -55,59 +55,38 @@ func simpleValidation(ids []string) []string {
 }
 
 func complexValidation(ids []string) []string {
-	idsWithParts := map[string][][]string{}
-	for _, id := range ids {
-		parts := splitIntoParts(id)
-		idsWithParts[id] = parts
-	}
+	return invalidIds(ids)
+}
 
+func invalidIds(ids []string) []string {
 	invalidIds := []string{}
-	for id, parts := range idsWithParts {
-		valid := isValid(parts)
-		if !valid {
-			invalidIds = append(invalidIds, id)
+	for _, id := range ids {
+		length := len(id)
+
+		dividers := []int{}
+		for i := 1; i < length; i++ {
+			if length%i == 0 {
+				dividers = append(dividers, i)
+			}
+		}
+
+		for _, divider := range dividers {
+			amountOfParts := length / divider
+			startOfSplit := 0
+			parts := []string{}
+			for i := 0; i < amountOfParts; i++ {
+				endOfSplit := startOfSplit + divider
+				part := id[startOfSplit:endOfSplit]
+				parts = append(parts, part)
+				startOfSplit += divider
+			}
+			if !isValidSetOfParts(parts) {
+				invalidIds = append(invalidIds, id)
+				break
+			}
 		}
 	}
-
 	return invalidIds
-}
-
-func splitIntoParts(id string) [][]string {
-	length := len(id)
-	dividers := []int{}
-	for i := 1; i < length; i++ {
-		if length%i == 0 {
-			dividers = append(dividers, i)
-		}
-	}
-	allParts := [][]string{}
-	for _, divider := range dividers {
-		amountOfParts := length / divider
-		startOfSplit := 0
-		parts := []string{}
-		for i := 0; i < amountOfParts; i++ {
-			endOfSplit := startOfSplit + divider
-			part := id[startOfSplit:endOfSplit]
-			parts = append(parts, part)
-			startOfSplit += divider
-		}
-		allParts = append(allParts, parts)
-	}
-	return allParts
-}
-
-func isValid(allParts [][]string) bool {
-	partsValidity := []bool{}
-	for _, parts := range allParts {
-		partsValidity = append(partsValidity, isValidSetOfParts(parts))
-	}
-
-	for _, validPart := range partsValidity {
-		if !validPart {
-			return false
-		}
-	}
-	return true
 }
 
 func isValidSetOfParts(parts []string) bool {
