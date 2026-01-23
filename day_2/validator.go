@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 const (
@@ -63,9 +60,8 @@ func complexValidation(ids []string) []string {
 
 func invalidIds(ids []string) []string {
 	invalidIds := []string{}
-	timeBuildingDividers := int64(0)
-	timeValidating := int64(0)
 	dividerCache := map[int][]int{}
+
 	for _, id := range ids {
 		length := len(id)
 
@@ -81,27 +77,31 @@ func invalidIds(ids []string) []string {
 			dividerCache[length] = dividers
 		}
 
-		startValidation := time.Now()
+		// Check if the ID is valid for the given divider
+		// All valid matches will be added as true to the isValid slice
+		isValid := []bool{}
 		for _, divider := range dividers {
 			amountOfParts := length / divider
 			startOfSplit := 0
-			parts := []string{}
+			lastPart := ""
 			for i := 0; i < amountOfParts; i++ {
 				endOfSplit := startOfSplit + divider
 				part := id[startOfSplit:endOfSplit]
-				parts = append(parts, part)
+				if lastPart != "" && part != lastPart {
+					// Is valid ID
+					isValid = append(isValid, true)
+					break
+				}
+				lastPart = part
 				startOfSplit += divider
 			}
-			if !isValidSetOfParts(parts) {
-				invalidIds = append(invalidIds, id)
-				break
-			}
 		}
-		done := time.Since(startValidation)
-		timeValidating += done.Nanoseconds()
+
+		// If the legth differs it means that at least one of the checks resulted in an invalid ID
+		if len(isValid) != len(dividers) {
+			invalidIds = append(invalidIds, id)
+		}
 	}
-	spew.Dump(fmt.Sprintf("Took %d milliseconds to build dividers", timeBuildingDividers/1000000))
-	spew.Dump(fmt.Sprintf("Took %d milliseconds validating", timeValidating/1000000))
 	return invalidIds
 }
 
