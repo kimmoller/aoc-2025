@@ -139,8 +139,10 @@ func mergeCircuits(c1 int, c2 int, allCircuits map[int][]int, storage *Storage) 
 	if firstCircuit, ok := allCircuits[c1]; ok {
 		if secondCircuit, ok := allCircuits[c2]; ok {
 			mergedCircuit := slices.Concat(firstCircuit, secondCircuit)
+
 			allCircuits[c1] = mergedCircuit
-			// Update boxes in second circuit
+			allCircuits[c2] = []int{}
+
 			for _, boxId := range secondCircuit {
 				box, err := storage.Box(boxId)
 				if err != nil {
