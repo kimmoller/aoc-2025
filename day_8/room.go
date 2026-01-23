@@ -28,9 +28,10 @@ func SumOfLargest(data []string, connections int) (*int, error) {
 
 	storage := NewStorage(boxes)
 
-	allPairs := pairs(allPoints, connections)
+	allPairs := pairs(allPoints)
+	limitedPairs := limitedPairs(allPairs, connections)
 
-	allCircuits, err := circuits(allPairs, storage)
+	allCircuits, _, err := circuits(limitedPairs, storage)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +43,38 @@ func SumOfLargest(data []string, connections int) (*int, error) {
 	slices.Sort(sizes)
 	slices.Reverse(sizes)
 	sum := sizes[0] * sizes[1] * sizes[2]
+	return &sum, nil
+}
+
+func SumOfLastPair(data []string) (*int, error) {
+	allPoints, boxes, err := points(data)
+	if err != nil {
+		return nil, err
+	}
+
+	storage := NewStorage(boxes)
+
+	allPairs := pairs(allPoints)
+
+	_, lastPair, err := circuits(allPairs, storage)
+	if err != nil {
+		return nil, err
+	}
+
+	var p1 Point
+	var p2 Point
+	for _, point := range allPoints {
+		if lastPair.b1 == point.id {
+			p1 = point
+			continue
+		}
+		if lastPair.b2 == point.id {
+			p2 = point
+			continue
+		}
+	}
+
+	sum := p1.x * p2.x
 	return &sum, nil
 }
 
@@ -69,7 +102,11 @@ func points(data []string) ([]Point, map[int]*JunctionBox, error) {
 	return points, boxes, nil
 }
 
-func pairs(points []Point, numberOfPairs int) []Pair {
+func limitedPairs(pairs []Pair, limit int) []Pair {
+	return pairs[:limit]
+}
+
+func pairs(points []Point) []Pair {
 	pairs := []Pair{}
 	uniqueDistances := map[float64]struct{}{}
 	for _, first := range points {
@@ -78,7 +115,7 @@ func pairs(points []Point, numberOfPairs int) []Pair {
 				continue
 			}
 
-			distance := math.Sqrt(math.Pow(float64((first.x-second.x)), 2) + math.Pow(float64((first.y-second.y)), 2) + math.Pow(float64((first.z-second.z)), 2))
+			distance := distanceBetweenPoints(first, second)
 			if _, ok := uniqueDistances[distance]; ok {
 				continue
 			}
@@ -97,20 +134,20 @@ func pairs(points []Point, numberOfPairs int) []Pair {
 		}
 		return 0
 	})
-	return pairs[:numberOfPairs]
+	return pairs
 }
 
-func circuits(pairs []Pair, storage *Storage) (map[int][]int, error) {
+func circuits(pairs []Pair, storage *Storage) (map[int][]int, *Pair, error) {
 	allCircuits := map[int][]int{}
 	rollingId := 1
 	for _, pair := range pairs {
 		b1, err := storage.Box(pair.b1)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		b2, err := storage.Box(pair.b2)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		if b1.circuit != 0 && b2.circuit != 0 && (b1.circuit == b2.circuit) {
@@ -118,7 +155,7 @@ func circuits(pairs []Pair, storage *Storage) (map[int][]int, error) {
 		} else if b1.circuit != 0 && b2.circuit != 0 {
 			err := mergeCircuits(b1.circuit, b2.circuit, allCircuits, storage)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		} else if b1.circuit != 0 && b2.circuit == 0 {
 			placeIntoCircuit(b2, b1.circuit, allCircuits)
@@ -130,9 +167,24 @@ func circuits(pairs []Pair, storage *Storage) (map[int][]int, error) {
 			allCircuits[rollingId] = []int{b1.id, b2.id}
 			rollingId++
 		}
+
+		// Return all circuits and last pair once there is only one circuit left with all the boxes connected to it
+		if len(allCircuits) == 1 {
+			amountOfBoxes := len(storage.boxes)
+			if circuit, ok := allCircuits[b1.circuit]; ok {
+				if len(circuit) == amountOfBoxes {
+					return allCircuits, &pair, nil
+				}
+			}
+			if circuit, ok := allCircuits[b2.circuit]; ok {
+				if len(circuit) == amountOfBoxes {
+					return allCircuits, &pair, nil
+				}
+			}
+		}
 	}
 
-	return allCircuits, nil
+	return allCircuits, nil, nil
 }
 
 func mergeCircuits(c1 int, c2 int, allCircuits map[int][]int, storage *Storage) error {
@@ -141,7 +193,7 @@ func mergeCircuits(c1 int, c2 int, allCircuits map[int][]int, storage *Storage) 
 			mergedCircuit := slices.Concat(firstCircuit, secondCircuit)
 
 			allCircuits[c1] = mergedCircuit
-			allCircuits[c2] = []int{}
+			delete(allCircuits, c2)
 
 			for _, boxId := range secondCircuit {
 				box, err := storage.Box(boxId)
@@ -158,4 +210,8 @@ func mergeCircuits(c1 int, c2 int, allCircuits map[int][]int, storage *Storage) 
 func placeIntoCircuit(box *JunctionBox, circuit int, allCircuits map[int][]int) {
 	box.SetCircuit(circuit)
 	allCircuits[circuit] = append(allCircuits[circuit], box.id)
+}
+
+func distanceBetweenPoints(first Point, second Point) float64 {
+	return math.Sqrt(math.Pow(float64((first.x-second.x)), 2) + math.Pow(float64((first.y-second.y)), 2) + math.Pow(float64((first.z-second.z)), 2))
 }

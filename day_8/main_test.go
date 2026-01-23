@@ -23,17 +23,17 @@ func TestPartOneWithRealData(t *testing.T) {
 }
 
 func TestPartTwoWithTestData(t *testing.T) {
-	result, err := Run("test_data", 10)
+	result, err := RunLimitless("test_data")
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 4277556, *result)
+	assert.Equal(t, 25272, *result)
 }
 
 func TestPartTwoWithRealData(t *testing.T) {
-	result, err := Run("data", 1000)
+	result, err := RunLimitless("data")
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 8360, *result)
+	assert.Equal(t, 9069509600, *result)
 }

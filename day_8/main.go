@@ -14,3 +14,14 @@ func Run(path string, connections int) (*int, error) {
 
 	return sum, nil
 }
+
+func RunLimitless(path string) (*int, error) {
+	data, err := utils.ReadData(path)
+	if err != nil {
+		return nil, err
+	}
+
+	sum, err := SumOfLastPair(data)
+
+	return sum, nil
+}
