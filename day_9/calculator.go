@@ -23,6 +23,8 @@ type Boundry struct {
 	max int
 }
 
+// TODO: Optimize part two further by dealing with entire areas instead of pairs to avoid counting the
+// gap points during every validation since they are already counted when creating the boundries.
 func BiggestArea(data []string, withBoundries bool) (*float64, error) {
 	pairs, err := toPairs(data, withBoundries)
 	if err != nil {
