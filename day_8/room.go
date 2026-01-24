@@ -108,21 +108,13 @@ func limitedPairs(pairs []Pair, limit int) []Pair {
 
 func pairs(points []Point) []Pair {
 	pairs := []Pair{}
-	uniqueDistances := map[float64]struct{}{}
-	for _, first := range points {
-		for _, second := range points {
-			if first == second {
-				continue
-			}
-
+	for i := 0; i < len(points); i++ {
+		for j := i + 1; j < len(points); j++ {
+			first := points[i]
+			second := points[j]
 			distance := distanceBetweenPoints(first, second)
-			if _, ok := uniqueDistances[distance]; ok {
-				continue
-			}
-
 			pair := Pair{b1: first.id, b2: second.id, distance: distance}
 			pairs = append(pairs, pair)
-			uniqueDistances[distance] = struct{}{}
 		}
 	}
 	slices.SortFunc(pairs, func(a Pair, b Pair) int {
