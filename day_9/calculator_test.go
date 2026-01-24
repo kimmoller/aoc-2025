@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aoc2025/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -145,8 +146,11 @@ func TestPointIsInsideBoundries(t *testing.T) {
 
 	boundries := toBoundries(points)
 
-	p1 := Point{x: 5, y: 2}
-	assert.Equal(t, true, pointIsInsideBoundry(p1, boundries))
+	point := Point{x: 2, y: 2}
+	assert.Equal(t, true, pointIsInsideBoundry(point, boundries))
+
+	point = Point{x: 5, y: 2}
+	assert.Equal(t, true, pointIsInsideBoundry(point, boundries))
 }
 
 func TestAreaIsInsideBoundries(t *testing.T) {
@@ -204,5 +208,31 @@ func TestAreaIsInsideBoundriesWithAlternatingPoints(t *testing.T) {
 	assert.Equal(t, false, fits)
 
 	fits = areaFitsBoundry(points[6], points[10], boundries)
+	assert.Equal(t, false, fits)
+}
+
+func TestWrongFinalPairDoesFitsBoundry(t *testing.T) {
+	p1 := Point{x: 18483, y: 86261}
+	p2 := Point{x: 81652, y: 13582}
+
+	data, err := utils.ReadData("data")
+	if err != nil {
+		panic(err)
+	}
+
+	points, err := toPoints(data)
+	if err != nil {
+		panic(err)
+	}
+
+	boundries := toBoundries(points)
+
+	isInside := pointIsInsideBoundry(p1, boundries)
+	assert.Equal(t, true, isInside)
+
+	isInside = pointIsInsideBoundry(p2, boundries)
+	assert.Equal(t, true, isInside)
+
+	fits := areaFitsBoundry(p1, p2, boundries)
 	assert.Equal(t, false, fits)
 }

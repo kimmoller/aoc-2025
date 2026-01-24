@@ -6,8 +6,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Point struct {
@@ -32,7 +30,6 @@ func BiggestArea(data []string, withBoundries bool) (*float64, error) {
 	}
 
 	biggestArea := float64(0)
-	spew.Dump(len(pairs))
 	for _, pair := range pairs {
 		area := areaBetween(pair.p1, pair.p2)
 		if biggestArea < area {
@@ -58,10 +55,8 @@ func toPairs(data []string, withBoundries bool) ([]Pair, error) {
 	boundries := toBoundries(points)
 
 	pairs := []Pair{}
-	hmm := 0
 	for i := 0; i < len(points); i++ {
 		for j := i + 1; j < len(points); j++ {
-			hmm++
 			p1 := points[i]
 			p2 := points[j]
 			if withBoundries && !areaFitsBoundry(p1, p2, boundries) {
@@ -71,7 +66,6 @@ func toPairs(data []string, withBoundries bool) ([]Pair, error) {
 			pairs = append(pairs, pair)
 		}
 	}
-	spew.Dump(hmm)
 	return pairs, nil
 }
 
@@ -86,7 +80,7 @@ func areaFitsBoundry(p1 Point, p2 Point, boundries map[int]Boundry) bool {
 		return false
 	}
 
-	return true
+	return isEntireAreaInsideBoundries([]Point{p1, firstOpposingCorner, p2, secondOpposingCorner}, boundries)
 }
 
 func pointIsInsideBoundry(point Point, boundries map[int]Boundry) bool {
@@ -175,4 +169,55 @@ func withGapPoints(points []Point) []Point {
 		}
 	}
 	return finalPoints
+}
+
+func isEntireAreaInsideBoundries(points []Point, boundries map[int]Boundry) bool {
+	for i := 0; i < len(points); i++ {
+		p1 := points[i]
+		var p2 Point
+		if i == len(points)-1 {
+			p2 = points[0]
+		} else {
+			p2 = points[i+1]
+		}
+
+		if p1.x == p2.x {
+			if p1.y < p2.y {
+				for j := 1; j < p2.y-p1.y; j++ {
+					point := Point{x: p1.x, y: p1.y + j}
+					isInside := pointIsInsideBoundry(point, boundries)
+					if !isInside {
+						return false
+					}
+				}
+			} else {
+				for j := 1; j < p1.y-p2.y; j++ {
+					point := Point{x: p1.x, y: p2.y + j}
+					isInside := pointIsInsideBoundry(point, boundries)
+					if !isInside {
+						return false
+					}
+				}
+			}
+		} else {
+			if p1.x < p2.x {
+				for j := 1; j < p2.x-p1.x; j++ {
+					point := Point{x: p1.x + j, y: p1.y}
+					isInside := pointIsInsideBoundry(point, boundries)
+					if !isInside {
+						return false
+					}
+				}
+			} else {
+				for j := 1; j < p1.x-p2.x; j++ {
+					point := Point{x: p2.x + j, y: p1.y}
+					isInside := pointIsInsideBoundry(point, boundries)
+					if !isInside {
+						return false
+					}
+				}
+			}
+		}
+	}
+	return true
 }

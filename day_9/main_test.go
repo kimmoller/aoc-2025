@@ -38,5 +38,5 @@ func TestPartTwoWithRealData(t *testing.T) {
 		panic(err)
 	}
 	intResult := int(*result)
-	assert.Equal(t, 24, intResult)
+	assert.Equal(t, 1539238860, intResult)
 }
