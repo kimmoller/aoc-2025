@@ -2,18 +2,18 @@ package main
 
 import (
 	"aoc2025/utils"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
-func Run(path string) (*int, error) {
+func Run(path string, withBoundries bool) (*float64, error) {
 	data, err := utils.ReadData(path)
 	if err != nil {
 		return nil, err
 	}
 
-	spew.Dump(data)
+	area, err := BiggestArea(data, withBoundries)
+	if err != nil {
+		return nil, err
+	}
 
-	sum := 0
-	return &sum, nil
+	return area, nil
 }

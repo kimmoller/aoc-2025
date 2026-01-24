@@ -3,41 +3,40 @@ package main
 import (
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPartOneWithTestData(t *testing.T) {
-	result, err := Run("test_data")
+	result, err := Run("test_data", false)
 	if err != nil {
 		panic(err)
 	}
-	spew.Dump(result)
-	// assert.Equal(t, 4277556, *result)
+	assert.Equal(t, float64(50), *result)
 }
 
 func TestPartOneWithRealData(t *testing.T) {
-	result, err := Run("data")
+	result, err := Run("data", false)
 	if err != nil {
 		panic(err)
 	}
-	spew.Dump(result)
-	// assert.Equal(t, 4583860641327, *result)
+	intResult := int(*result)
+	assert.Equal(t, 4759531084, intResult)
 }
 
 func TestPartTwoWithTestData(t *testing.T) {
-	result, err := Run("test_data")
+	result, err := Run("test_data", true)
 	if err != nil {
 		panic(err)
 	}
-	spew.Dump(result)
-	// assert.Equal(t, 4277556, *result)
+	intResult := int(*result)
+	assert.Equal(t, 24, intResult)
 }
 
 func TestPartTwoWithRealData(t *testing.T) {
-	result, err := Run("data")
+	result, err := Run("data", true)
 	if err != nil {
 		panic(err)
 	}
-	spew.Dump(result)
-	// assert.Equal(t, 4277556, *result)
+	intResult := int(*result)
+	assert.Equal(t, 24, intResult)
 }
