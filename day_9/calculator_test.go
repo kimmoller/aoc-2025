@@ -171,3 +171,38 @@ func TestAreaIsInsideBoundries(t *testing.T) {
 	fits = areaFitsBoundry(points[2], points[4], boundries)
 	assert.Equal(t, true, fits)
 }
+
+func TestAreaIsInsideBoundriesWithAlternatingPoints(t *testing.T) {
+	points := []Point{
+		{x: 2, y: 2},
+		{x: 4, y: 2},
+		{x: 4, y: 4},
+		{x: 6, y: 4},
+		{x: 6, y: 6},
+		{x: 4, y: 6},
+		{x: 4, y: 8},
+		{x: 2, y: 8},
+		{x: 2, y: 6},
+		{x: 0, y: 6},
+		{x: 0, y: 4},
+		{x: 2, y: 4},
+	}
+
+	boundries := toBoundries(points)
+	assert.Equal(t, 7, len(boundries))
+
+	fits := areaFitsBoundry(points[0], points[6], boundries)
+	assert.Equal(t, true, fits)
+
+	fits = areaFitsBoundry(points[4], points[10], boundries)
+	assert.Equal(t, true, fits)
+
+	fits = areaFitsBoundry(points[1], points[8], boundries)
+	assert.Equal(t, true, fits)
+
+	fits = areaFitsBoundry(points[0], points[3], boundries)
+	assert.Equal(t, false, fits)
+
+	fits = areaFitsBoundry(points[6], points[10], boundries)
+	assert.Equal(t, false, fits)
+}
