@@ -8,6 +8,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestTurnOn(t *testing.T) {
+	data := map[int]string{
+		2: "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}",
+		3: "[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}",
+	}
+
+	for key, value := range data {
+		machine, err := NewMachine(value)
+		if err != nil {
+			panic(err)
+		}
+		verifyMachine(t, value, machine)
+
+		buttonPresses, err := machine.TurnOn()
+		if err != nil {
+			panic(err)
+		}
+
+		assert.Equal(t, key, *buttonPresses)
+	}
+}
+
 func TestCreateMachine(t *testing.T) {
 	data := "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}"
 	machine, err := NewMachine(data)
@@ -48,7 +70,7 @@ func verifyMachine(t *testing.T, data string, machine *Machine) {
 	// Simple way to ignore the [] around the data
 	amountOfStates := len(requiredStateData) - 2
 
-	assert.Equal(t, amountOfStates, len(machine.currentState))
+	assert.Equal(t, amountOfStates, len(machine.initialState))
 	assert.Equal(t, amountOfStates, len(machine.requiredState))
 
 	buttonData := inputs[1 : len(inputs)-1]

@@ -1,12 +1,13 @@
 package main
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 )
 
 type Machine struct {
-	currentState  []bool
+	initialState  []bool
 	requiredState []bool
 	buttons       []Button
 }
@@ -17,6 +18,32 @@ type Button struct {
 
 func NewMachine(data string) (*Machine, error) {
 	return toMachine(data)
+}
+
+func (m *Machine) TurnOn() (*int, error) {
+	number := 2
+	for {
+		combinations, err := m.buttonCombinations(number)
+		if err != nil {
+			return nil, err
+		}
+		for _, combination := range combinations {
+			state := slices.Clone(m.initialState)
+			for _, button := range combination.buttons {
+				for _, action := range button.actions {
+					state[action] = toggleState(state[action])
+				}
+			}
+			if isOn(state, m.requiredState) {
+				return &number, nil
+			}
+		}
+		number++
+	}
+}
+
+func (m *Machine) buttonCombinations(number int) ([]Combination, error) {
+	return Combinations(number, m.buttons)
 }
 
 func toMachine(data string) (*Machine, error) {
@@ -31,7 +58,7 @@ func toMachine(data string) (*Machine, error) {
 		return nil, err
 	}
 
-	return &Machine{currentState: initialStates, requiredState: requiredStates, buttons: buttons}, nil
+	return &Machine{initialState: initialStates, requiredState: requiredStates, buttons: buttons}, nil
 }
 
 func toStates(data string) ([]bool, []bool) {
@@ -66,4 +93,17 @@ func toButtons(data []string) ([]Button, error) {
 		buttons = append(buttons, button)
 	}
 	return buttons, nil
+}
+
+func toggleState(state bool) bool {
+	return !state
+}
+
+func isOn(state, requiredState []bool) bool {
+	for i := 0; i < len(state); i++ {
+		if state[i] != requiredState[i] {
+			return false
+		}
+	}
+	return true
 }
