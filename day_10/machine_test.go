@@ -145,4 +145,8 @@ func verifyMachine(t *testing.T, data string, machine *Machine) {
 
 	buttonData := inputs[1 : len(inputs)-1]
 	assert.Equal(t, len(buttonData), len(machine.buttons))
+
+	joltageData := inputs[len(inputs)-1]
+	joltages := strings.Split(joltageData, ",")
+	assert.Equal(t, len(joltages), len(machine.joltages))
 }

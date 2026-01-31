@@ -11,6 +11,7 @@ type Machine struct {
 	initialState  []bool
 	requiredState []bool
 	buttons       map[int][]int
+	joltages      []int
 }
 
 func NewMachine(data string) (*Machine, error) {
@@ -63,7 +64,17 @@ func toMachine(data string) (*Machine, error) {
 		return nil, err
 	}
 
-	return &Machine{initialState: initialStates, requiredState: requiredStates, buttons: buttons}, nil
+	joltageData := inputs[len(inputs)-1]
+	joltages := []int{}
+	for _, joltage := range strings.Split(joltageData[1:len(joltageData)-1], ",") {
+		number, err := strconv.Atoi(joltage)
+		if err != nil {
+			return nil, err
+		}
+		joltages = append(joltages, number)
+	}
+
+	return &Machine{initialState: initialStates, requiredState: requiredStates, buttons: buttons, joltages: joltages}, nil
 }
 
 func toStates(data string) ([]bool, []bool) {
