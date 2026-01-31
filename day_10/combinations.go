@@ -2,127 +2,81 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/davecgh/go-spew/spew"
+	"slices"
 )
 
 type Combination struct {
-	buttons []Button
+	ids []int
 }
 
-func Combinations(number int, buttons []Button) ([]Combination, error) {
-	spew.Dump(fmt.Sprintf("Get combinations for size %d", number))
-	finalCombinations := [][]Combination{}
-	if number == 2 || number == len(buttons) {
-		combinations, err := calculateCombinations(number, [][]Combination{}, buttons)
-		if err != nil {
-			return nil, err
-		}
-		finalCombinations = append(finalCombinations, combinations...)
-	} else {
-		baseCombinations := [][]Combination{}
-		for i := 2; i < number; i++ {
-			newBase, err := calculateCombinations(i, baseCombinations, buttons)
+func AllCombinations(maxCombinations int) (map[int][][][]int, error) {
+	allCombinations := map[int][][][]int{}
+	items := []int{}
+	for i := 0; i < maxCombinations; i++ {
+		items = append(items, i)
+	}
+	for i := 2; i <= maxCombinations; i++ {
+		combinations := [][][]int{}
+		for j := 2; j <= i; j++ {
+			previous := [][]int{}
+			if j > 2 {
+				previous = combinations[j-3]
+			}
+			combination, err := Combinations(items[:i], previous, j)
 			if err != nil {
 				return nil, err
 			}
-			pruned := pruneCombinations(newBase)
-			baseCombinations = pruned
+			combinations = append(combinations, combination)
 		}
-
-		combinations, err := calculateCombinations(number, baseCombinations, buttons)
-		if err != nil {
-			return nil, err
-		}
-		finalCombinations = append(finalCombinations, combinations...)
+		allCombinations[i] = combinations
 	}
-
-	flatCombinations := []Combination{}
-	for _, combination := range finalCombinations {
-		flatCombinations = append(flatCombinations, combination...)
-	}
-	// spew.Dump(flatCombinations)
-	return flatCombinations, nil
+	return allCombinations, nil
 }
 
-func calculateCombinations(number int, baseCombinations [][]Combination, buttons []Button) ([][]Combination, error) {
-	is4 := false
-	if number == 4 {
-		is4 = true
+func Combinations(items []int, previousCombinations [][]int, perCombination int) ([][]int, error) {
+	if perCombination > len(items) {
+		return nil, fmt.Errorf("given combination size %d is bigger than the amount of items, %d", perCombination, len(items))
 	}
-	if number > len(buttons) {
-		return nil, fmt.Errorf("given combination size %d is bigger than the amount of buttons, %d", number, len(buttons))
+	if perCombination == len(items) {
+		return [][]int{items}, nil
 	}
-	if number == len(buttons) {
-		return [][]Combination{{{buttons: buttons}}}, nil
-	}
-	combinations := [][]Combination{}
+	combinations := [][]int{}
 	// Need special handling for two as it only requires a single nested loop
-	if number == 2 {
-		for i := 0; i < len(buttons)-1; i++ {
-			newCombinations := []Combination{}
-			for j := i + 1; j < len(buttons); j++ {
-				newCombinations = append(newCombinations, Combination{buttons: []Button{buttons[i], buttons[j]}})
+	if perCombination == 2 {
+		for i := 0; i < len(items)-1; i++ {
+			for j := i + 1; j < len(items); j++ {
+				combinations = append(combinations, []int{items[i], items[j]})
 			}
-			combinations = append(combinations, newCombinations)
 		}
 		return combinations, nil
 	}
 
-	for i := 0; i < len(baseCombinations); i++ {
-		if is4 {
-			spew.Dump(fmt.Sprintf("First loop index %d", i))
-		}
-		subSet := baseCombinations[i]
-		for j := 0; j < len(subSet); j++ {
-			if is4 {
-				spew.Dump(fmt.Sprintf("Second loop index %d", j))
-			}
-			newCombination := []Combination{}
-			baseCombination := subSet[j]
-			if is4 {
-				spew.Dump(fmt.Sprintf("Base combination %v", baseCombination))
-			}
-			startingIndex := 0
-			// for i, button := range buttons {
-			// 	if button == baseCombination.buttons[0] {
-
-			// 	}
-			// }
-			// startingIndex :=  len(baseCombination.buttons) + j + i
-			for k := startingIndex; k < len(buttons); k++ {
-				if is4 {
-					spew.Dump(fmt.Sprintf("Starting index %d", k))
-				}
-				combinationButtons := append(baseCombination.buttons, buttons[k])
-				newCombination = append(newCombination, Combination{buttons: combinationButtons})
-				if is4 {
-					spew.Dump(fmt.Sprintf("Appended combination %v", combinationButtons))
-				}
-			}
-			if is4 {
-				spew.Dump(fmt.Sprintf("Append new combination %v", newCombination))
-			}
-			combinations = append(combinations, newCombination)
+	pruned := [][]int{}
+	for _, combination := range previousCombinations {
+		if combination[len(combination)-1] != items[len(items)-1] {
+			pruned = append(pruned, combination)
 		}
 	}
 
-	return combinations, nil
-}
-
-func pruneCombinations(combinations [][]Combination) [][]Combination {
-	// Prune out all lists with only one combination
-	validBases := [][]Combination{}
-	for _, combination := range combinations {
-		if len(combination) > 1 {
-			validBases = append(validBases, combination)
+	newCombinations := [][]int{}
+	lastDigit := items[len(items)-1]
+	for _, combination := range pruned {
+		previousDigit := combination[len(combination)-1]
+		if previousDigit == lastDigit-1 {
+			clone := slices.Clone(combination)
+			newCombination := append(clone, lastDigit)
+			newCombinations = append(newCombinations, newCombination)
+		} else {
+			rollingNumber := 1
+			for i := previousDigit; i < lastDigit; i++ {
+				clone := slices.Clone(combination)
+				newNumber := clone[len(clone)-1] + rollingNumber
+				newCombination := append(clone, newNumber)
+				newCombinations = append(newCombinations, newCombination)
+				rollingNumber++
+			}
 		}
 	}
 
-	baseCombinations := [][]Combination{}
-	for _, combination := range validBases {
-		baseCombinations = append(baseCombinations, combination[:len(combination)-1])
-	}
-
-	return baseCombinations
+	return newCombinations, nil
 }

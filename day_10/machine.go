@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -9,41 +10,45 @@ import (
 type Machine struct {
 	initialState  []bool
 	requiredState []bool
-	buttons       []Button
-}
-
-type Button struct {
-	actions []int
+	buttons       map[int][]int
 }
 
 func NewMachine(data string) (*Machine, error) {
 	return toMachine(data)
 }
 
-func (m *Machine) TurnOn() (*int, error) {
-	number := 2
-	for {
-		combinations, err := m.buttonCombinations(number)
-		if err != nil {
-			return nil, err
+func (m *Machine) TurnOn(combinationsPerNumberOfItems map[int][][][]int) (*int, error) {
+	// Verify if the machine can be turned on with one button press
+	for _, actions := range m.buttons {
+		currentState := slices.Clone(m.initialState)
+		for _, action := range actions {
+			currentState[action] = toggleState(currentState[action])
 		}
-		for _, combination := range combinations {
-			state := slices.Clone(m.initialState)
-			for _, button := range combination.buttons {
-				for _, action := range button.actions {
-					state[action] = toggleState(state[action])
+		if isOn(currentState, m.requiredState) {
+			result := 1
+			return &result, nil
+		}
+	}
+
+	if allCombinations, ok := combinationsPerNumberOfItems[len(m.buttons)]; ok {
+		for i, combinations := range allCombinations {
+			for _, combination := range combinations {
+				currentState := slices.Clone(m.initialState)
+				for _, id := range combination {
+					if actions, ok := m.buttons[id]; ok {
+						for _, action := range actions {
+							currentState[action] = toggleState(currentState[action])
+						}
+					}
+				}
+				if isOn(currentState, m.requiredState) {
+					number := i + 2
+					return &number, nil
 				}
 			}
-			if isOn(state, m.requiredState) {
-				return &number, nil
-			}
 		}
-		number++
 	}
-}
-
-func (m *Machine) buttonCombinations(number int) ([]Combination, error) {
-	return Combinations(number, m.buttons)
+	return nil, fmt.Errorf("could not turn on machine with initial state %v and required state %v", m.initialState, m.requiredState)
 }
 
 func toMachine(data string) (*Machine, error) {
@@ -76,21 +81,21 @@ func toStates(data string) ([]bool, []bool) {
 	return states, requiredStates
 }
 
-func toButtons(data []string) ([]Button, error) {
-	buttons := []Button{}
-	for _, input := range data {
+func toButtons(data []string) (map[int][]int, error) {
+	buttons := map[int][]int{}
+	for i, input := range data {
 		withoutPrefix := strings.TrimPrefix(input, "(")
 		withoutSuffix := strings.TrimSuffix(withoutPrefix, ")")
-		button := Button{}
+		actions := []int{}
 		values := strings.Split(withoutSuffix, ",")
 		for _, value := range values {
 			number, err := strconv.Atoi(value)
 			if err != nil {
 				return nil, err
 			}
-			button.actions = append(button.actions, number)
+			actions = append(actions, number)
 		}
-		buttons = append(buttons, button)
+		buttons[i] = actions
 	}
 	return buttons, nil
 }
